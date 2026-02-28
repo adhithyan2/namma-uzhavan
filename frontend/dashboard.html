@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate Dashboard - Crop Strategy Engine</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header text-center py-3">
+                <i class="fas fa-leaf fa-2x text-success"></i>
+                <h6 class="mt-2 fw-bold">Crop Engine</h6>
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="dashboard.html">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="marketplace.html">
+                        <i class="fas fa-shopping-cart"></i> Marketplace
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="waste.html">
+                        <i class="fas fa-recycle"></i> Waste to Value
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="help.html">
+                        <i class="fas fa-question-circle"></i> Help & Support
+                    </a>
+                </li>
+                <li class="nav-item mt-auto">
+                    <a class="nav-link text-danger" href="#" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="dashboard-header d-flex justify-content-between align-items-center px-4 py-3">
+                <div>
+                    <div id="guestBanner" class="guest-banner d-none">
+                        <i class="fas fa-user-clock"></i>
+                        <div class="guest-text">
+                            <strong>Guest Mode</strong>
+                            <small>Limited features - Login for full access</small>
+                        </div>
+                        <button class="btn btn-sm btn-warning" onclick="upgradeToFull()">
+                            <i class="fas fa-arrow-up"></i> Upgrade
+                        </button>
+                    </div>
+                    <h4 class="fw-bold mb-0">Climate Dashboard</h4>
+                    <small class="text-muted">Monitor weather and get crop suggestions</small>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <select class="form-select form-select-sm" style="width:auto;" id="cropLanguage" onchange="changeCropLanguage()">
+                        <option value="en">English</option>
+                        <option value="ta">Tamil</option>
+                        <option value="hi">Hindi</option>
+                        <option value="te">Telugu</option>
+                    </select>
+                    <div class="voice-container">
+                        <button class="btn btn-success" id="voiceBtn" onclick="toggleVoice()" title="Voice Assistant">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <div class="voice-output" id="voiceOutput"></div>
+                    </div>
+                    <div class="user-profile d-flex align-items-center gap-2">
+                        <img src="https://ui-avatars.com/api/?name=Farmer&background=2E7D32&color=fff&size=40" class="rounded-circle" id="profileImg" style="width:40px;height:40px;">
+                        <div>
+                            <div id="userName" class="fw-bold">Farmer</div>
+                            <small id="userLocation" class="text-muted">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content p-4">
+                <!-- Quick Stats for Farmer -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card shadow-sm border-0 quick-stat">
+                            <div class="card-body text-center">
+                                <i class="fas fa-temperature-high fa-2x text-danger"></i>
+                                <h4 class="mt-2" id="quickTemp">--°C</h4>
+                                <small class="text-muted">Temperature</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm border-0 quick-stat">
+                            <div class="card-body text-center">
+                                <i class="fas fa-tint fa-2x text-info"></i>
+                                <h4 class="mt-2" id="quickHumidity">--%</h4>
+                                <small class="text-muted">Humidity</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm border-0 quick-stat">
+                            <div class="card-body text-center">
+                                <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                                <h4 class="mt-2" id="quickRisk">--</h4>
+                                <small class="text-muted">Risk Level</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow-sm border-0 quick-stat">
+                            <div class="card-body text-center">
+                                <i class="fas fa-leaf fa-2x text-success"></i>
+                                <h4 class="mt-2" id="quickCrop">--</h4>
+                                <small class="text-muted">Best Crop</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="card-title fw-bold"><i class="fas fa-cloud-sun text-success me-2"></i>Current Weather</h5>
+                                    <div class="search-box">
+                                        <input type="text" id="locationSearch" class="form-control" placeholder="Search location..." onkeypress="handleLocationKeyPress(event)">
+                                        <button class="btn btn-success btn-sm" onclick="searchWeather()">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="weather-display" id="weatherDisplay">
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border text-success"></div>
+                                        <p class="mt-2">Loading weather data...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Temperature Chart -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-3"><i class="fas fa-chart-line text-success me-2"></i>Temperature Monitoring</h5>
+                                <div style="height: 300px;">
+                                    <canvas id="tempChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Climate Prediction & Crop Suggestion -->
+                <div class="row">
+                    <!-- 7-Day Forecast -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-3"><i class="fas fa-calendar-week text-success me-2"></i>7-Day Forecast</h5>
+                                <div class="forecast-container" id="forecastContainer">
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border text-success"></div>
+                                    </div>
+                                </div>
+                                <div class="climate-alerts mt-3" id="climateAlerts"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Crop Suggestion Engine -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold mb-3"><i class="fas fa-seedling text-success me-2"></i>Crop Suggestion Engine</h5>
+                                <div class="crop-suggestion" id="cropSuggestion">
+                                    <div class="text-center py-4">
+                                        <div class="spinner-border text-success"></div>
+                                        <p class="mt-2">Analyzing climate data...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

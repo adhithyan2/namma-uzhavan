@@ -1525,8 +1525,35 @@ app.post('/api/farmer-login', async (req, res) => {
       return res.status(400).json({ error: 'Contact and password required' });
     }
     
-    // Find farmer by phone or email
-    const farmer = farmers.find(f => f.phoneNo === contact || f.email === contact);
+    // Find farmer in memory first
+    let farmer = farmers.find(f => f.phoneNo === contact || f.email === contact);
+    
+    // If not in memory, check MongoDB
+    if (!farmer) {
+      try {
+        const dbFarmer = await Farmer.findOne({ phoneNo: contact });
+        if (dbFarmer) {
+          // Add to memory
+          farmer = {
+            farmerId: dbFarmer.id || dbFarmer._id,
+            farmerName: dbFarmer.farmerName,
+            phoneNo: dbFarmer.phoneNo,
+            email: dbFarmer.email,
+            password: dbFarmer.password,
+            village: dbFarmer.village,
+            district: dbFarmer.district,
+            state: dbFarmer.state,
+            landSize: dbFarmer.landSize,
+            soilType: dbFarmer.soilType,
+            irrigationType: dbFarmer.irrigationType,
+            currentCrop: dbFarmer.currentCrop
+          };
+          farmers.push(farmer);
+        }
+      } catch(e) {
+        console.log('MongoDB lookup error:', e.message);
+      }
+    }
     
     if (!farmer) {
       return res.status(401).json({ error: 'Farmer not found. Please register first.' });

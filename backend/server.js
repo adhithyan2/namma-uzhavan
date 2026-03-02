@@ -6,6 +6,7 @@ const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
+require('dotenv').config();
 
 const User = require('./models/User');
 const FarmerProfile = require('./models/FarmerProfile');
@@ -46,18 +47,20 @@ console.log('Crops in dataset:', kaggleCrops.join(', '));
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const JWT_SECRET = 'climate_crop_secret_key_2024';
-const WEATHER_API_KEY = '09043d37fbaf47dc1c785458c7385a7c';
+const JWT_SECRET = process.env.JWT_SECRET || 'climate_crop_secret_key_2024';
+const WEATHER_API_KEY = process.env.WEATHER_API_KEY || '09043d37fbaf47dc1c785458c7385a7c';
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 // Connect to MongoDB
-mongoose.connect('mongodb://127.0.0.1:27017/climate_crop_engine').then(() => {
+const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/climate_crop_engine';
+console.log('MongoDB URI:', mongoUri ? mongoUri.substring(0, 30) + '...' : 'NOT SET');
+mongoose.connect(mongoUri).then(() => {
   console.log('Connected to MongoDB');
   seedData();
-}).catch(err => console.error('MongoDB connection error:', err));
+}).catch(err => console.error('MongoDB connection error:', err.message));
 
 // JWT Middleware
 const authenticateToken = (req, res, next) => {
@@ -1087,13 +1090,62 @@ app.get('/api/farmers/:id', async (req, res) => {
 // PUT /api/farmers/:id
 app.put('/api/farmers/:id', async (req, res) => {
   try {
-    const index = farmers.findIndex(f => f.id === req.params.id);
+    const index = farmers.findIndex(f => f.farmerId === req.params.id);
     if (index === -1) {
       return res.status(404).json({ error: 'Farmer not found' });
     }
     
     farmers[index] = { ...farmers[index], ...req.body };
     res.json({ message: 'Farmer updated successfully', farmer: farmers[index] });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/farmer-profile-update - Update logged-in farmer profile
+app.post('/api/farmer-profile-update', async (req, res) => {
+  try {
+    const { farmerId, name, phone, village, district, state, landSize, soilType, irrigationType, currentCrop } = req.body;
+    
+    if (!farmerId) {
+      return res.status(400).json({ error: 'Farmer ID required' });
+    }
+    
+    const index = farmers.findIndex(f => f.farmerId === farmerId);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Farmer not found' });
+    }
+    
+    // Update farmer details in memory
+    if (name) farmers[index].farmerName = name;
+    if (phone) farmers[index].phoneNo = phone;
+    if (village) farmers[index].village = village;
+    if (district) farmers[index].district = district;
+    if (state) farmers[index].state = state;
+    if (landSize) farmers[index].landSize = landSize;
+    if (soilType) farmers[index].soilType = soilType;
+    if (irrigationType) farmers[index].irrigationType = irrigationType;
+    if (currentCrop) farmers[index].currentCrop = currentCrop;
+    
+    // Also update in MongoDB
+    try {
+      const updateData = {};
+      if (name) updateData.farmerName = name;
+      if (phone) updateData.phoneNo = phone;
+      if (village) updateData.village = village;
+      if (district) updateData.district = district;
+      if (state) updateData.state = state;
+      if (landSize) updateData.landSize = landSize;
+      if (soilType) updateData.soilType = soilType;
+      if (irrigationType) updateData.irrigationType = irrigationType;
+      if (currentCrop) updateData.currentCrop = currentCrop;
+      
+      await Farmer.findOneAndUpdate({ id: farmerId }, updateData, { new: true });
+    } catch (mongoErr) {
+      console.log('MongoDB update error (non-fatal):', mongoErr.message);
+    }
+    
+    res.json({ success: true, message: 'Profile updated successfully', farmer: farmers[index] });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -1288,17 +1340,176 @@ app.get('/api/forecast-by-coords', async (req, res) => {
   }
 });
 
+// Store OTPs temporarily (in production, use Redis)
+const otpStore = {};
+
+// POST /send-otp - Send OTP to phone/email
+app.post('/api/send-otp', async (req, res) => {
+  console.log('=== SEND OTP ===', req.body);
+  try {
+    const { contact } = req.body;
+    
+    if (!contact) {
+      return res.status(400).json({ error: 'Contact required' });
+    }
+    
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store OTP with expiry (5 minutes)
+    otpStore[contact] = { otp, expiry: Date.now() + 5 * 60 * 1000 };
+    
+    console.log(`OTP for ${contact}: ${otp}`); // In production, send via SMS
+    
+    res.json({ success: true, message: 'OTP sent successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /verify-otp - Verify OTP
+app.post('/api/verify-otp', async (req, res) => {
+  console.log('=== VERIFY OTP START ===');
+  console.log('Full body:', req.body);
+  console.log('Headers:', req.headers['content-type']);
+  
+  try {
+    let contact = req.body.contact;
+    let otp = req.body.otp;
+    
+    console.log('Extracted:', { contact, otp, contactType: typeof contact, otpType: typeof otp });
+    
+    // Handle if sent as string
+    if (typeof contact === 'string') contact = contact.trim();
+    if (typeof otp === 'string') otp = otp.trim();
+    
+    if (!contact || !otp) {
+      console.log('Missing contact or otp');
+      return res.status(400).json({ error: 'Contact and OTP required', received: { contact: !!contact, otp: !!otp } });
+    }
+    
+    // DEV MODE: Allow 123456 for testing
+    if (otp === '123456') {
+      console.log('DEV MODE: Accepting OTP 123456');
+      return res.json({ success: true, message: 'OTP verified' });
+    }
+    
+    const stored = otpStore[contact];
+    
+    if (!stored) {
+      return res.status(400).json({ error: 'OTP not requested' });
+    }
+    
+    if (Date.now() > stored.expiry) {
+      delete otpStore[contact];
+      return res.status(400).json({ error: 'OTP expired' });
+    }
+    
+    if (stored.otp !== otp) {
+      return res.status(400).json({ error: 'Invalid OTP' });
+    }
+    
+    delete otpStore[contact];
+    console.log('=== VERIFY OTP SUCCESS ===');
+    res.json({ success: true, message: 'OTP verified' });
+  } catch (error) {
+    console.log('=== VERIFY OTP ERROR ===', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /farmer-register - Register new farmer
+app.post('/api/farmer-register', async (req, res) => {
+  try {
+    const { name, contact, password, village, district, state, landSize, soilType, irrigationType, currentCrop } = req.body;
+    
+    if (!name || !contact || !password) {
+      return res.status(400).json({ error: 'Name, contact and password required' });
+    }
+    
+    // Check if farmer already exists in memory
+    const existingFarmer = farmers.find(f => f.phoneNo === contact || f.email === contact);
+    if (existingFarmer) {
+      return res.status(400).json({ error: 'Farmer already registered with this contact' });
+    }
+    
+    // Check if farmer exists in MongoDB
+    const dbFarmer = await Farmer.findOne({ phoneNo: contact });
+    if (dbFarmer) {
+      return res.status(400).json({ error: 'Farmer already registered with this contact' });
+    }
+    
+    // Generate farmer ID
+    const farmerId = 'FRM' + Date.now().toString().slice(-6);
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const newFarmer = {
+      farmerId,
+      farmerName: name,
+      phoneNo: contact,
+      email: contact.includes('@') ? contact : '',
+      password: hashedPassword,
+      village: village || '',
+      district: district || '',
+      state: state || '',
+      landSize: landSize || 0,
+      soilType: soilType || '',
+      irrigationType: irrigationType || '',
+      currentCrop: currentCrop || '',
+      riskLevel: 'Low',
+      registrationDate: new Date()
+    };
+    
+    // Save to memory
+    farmers.push(newFarmer);
+    
+    // Also save to MongoDB
+    try {
+      const mongoFarmer = new Farmer({
+        id: farmerId,
+        farmerName: name,
+        phoneNo: contact,
+        email: contact.includes('@') ? contact : '',
+        password: hashedPassword,
+        village: village || '',
+        district: district || '',
+        state: state || '',
+        landSize: landSize || '',
+        soilType: soilType || '',
+        irrigationType: irrigationType || '',
+        currentCrop: currentCrop || '',
+        riskLevel: 'Low',
+        registeredDate: new Date()
+      });
+      await mongoFarmer.save();
+    } catch (mongoErr) {
+      console.log('MongoDB save error (non-fatal):', mongoErr.message);
+    }
+    
+    console.log(`New farmer registered: ${farmerId} - ${name}`);
+    
+    res.json({ success: true, farmerId, message: 'Registration successful' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // POST /agent-login
 app.post('/api/agent-login', async (req, res) => {
   try {
     const { agentId, password } = req.body;
     
-    // Demo agent credentials
+    // Demo agent credentials (can be stored in DB in production)
     if (agentId === 'AGT001' && password === 'agent123') {
       const token = jwt.sign({ id: agentId, type: 'agent' }, JWT_SECRET, { expiresIn: '24h' });
-      res.json({ success: true, token, agentId, message: 'Login successful' });
+      res.json({ success: true, token, agentId, name: 'Rajesh Kumar', message: 'Login successful' });
+    } else if (agentId === 'AGT002' && password === 'agent456') {
+      const token = jwt.sign({ id: agentId, type: 'agent' }, JWT_SECRET, { expiresIn: '24h' });
+      res.json({ success: true, token, agentId, name: 'Mahesh Patel', message: 'Login successful' });
     } else {
-      res.status(401).json({ error: 'Invalid credentials' });
+      res.status(401).json({ error: 'Invalid Agent ID or Password' });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1308,15 +1519,93 @@ app.post('/api/agent-login', async (req, res) => {
 // POST /farmer-login
 app.post('/api/farmer-login', async (req, res) => {
   try {
-    const { phone, otp } = req.body;
+    const { contact, password } = req.body;
     
-    // Demo OTP check
-    if (otp === '123456') {
-      const token = jwt.sign({ id: phone, type: 'farmer' }, JWT_SECRET, { expiresIn: '24h' });
-      res.json({ success: true, token, phone, message: 'Login successful' });
-    } else {
-      res.status(401).json({ error: 'Invalid OTP' });
+    if (!contact || !password) {
+      return res.status(400).json({ error: 'Contact and password required' });
     }
+    
+    // Find farmer by phone or email
+    const farmer = farmers.find(f => f.phoneNo === contact || f.email === contact);
+    
+    if (!farmer) {
+      return res.status(401).json({ error: 'Farmer not found. Please register first.' });
+    }
+    
+    // Verify password
+    const isValid = await bcrypt.compare(password, farmer.password);
+    
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid password' });
+    }
+    
+    const token = jwt.sign({ id: farmer.farmerId, type: 'farmer' }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({ 
+      success: true, 
+      token, 
+      farmerId: farmer.farmerId, 
+      name: farmer.farmerName,
+      phone: farmer.phoneNo,
+      village: farmer.village,
+      district: farmer.district,
+      state: farmer.state,
+      landSize: farmer.landSize,
+      soilType: farmer.soilType,
+      irrigationType: farmer.irrigationType,
+      currentCrop: farmer.currentCrop,
+      message: 'Login successful' 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /farmer-login-otp (Alternative OTP login)
+app.post('/api/farmer-login-otp', async (req, res) => {
+  try {
+    const { contact, otp } = req.body;
+    
+    const stored = otpStore[contact];
+    
+    if (!stored) {
+      return res.status(400).json({ error: 'OTP not requested' });
+    }
+    
+    if (Date.now() > stored.expiry) {
+      delete otpStore[contact];
+      return res.status(400).json({ error: 'OTP expired' });
+    }
+    
+    if (stored.otp !== otp) {
+      return res.status(400).json({ error: 'Invalid OTP' });
+    }
+    
+    delete otpStore[contact];
+    
+    // Find or create farmer
+    let farmer = farmers.find(f => f.phoneNo === contact || f.email === contact);
+    
+    if (!farmer) {
+      // Auto-register for OTP login
+      const farmerId = 'FRM' + Date.now().toString().slice(-6);
+      farmer = {
+        farmerId,
+        farmerName: 'Farmer',
+        phoneNo: contact,
+        riskLevel: 'Low',
+        registrationDate: new Date()
+      };
+      farmers.push(farmer);
+    }
+    
+    const token = jwt.sign({ id: farmer.farmerId, type: 'farmer' }, JWT_SECRET, { expiresIn: '24h' });
+    res.json({ 
+      success: true, 
+      token, 
+      farmerId: farmer.farmerId, 
+      name: farmer.farmerName,
+      message: 'Login successful' 
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -1407,6 +1696,17 @@ app.get('/api/dealers', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`Open http://localhost:${PORT} in your browser`);
+});
+
+// Debug test endpoint
+app.post('/api/test-verify', (req, res) => {
+  console.log('TEST ENDPOINT:', req.body);
+  res.json({ success: true, message: 'Test endpoint works!' });
+});
+
+// Serve intro page at root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/intro.html'));
 });
 
 // Serve frontend for all other routes (SPA)

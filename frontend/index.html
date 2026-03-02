@@ -211,7 +211,7 @@
                             <div class="step" id="step3">3</div>
                         </div>
 
-                        <!-- Step 1: Basic Info -->
+                        <!-- Registration -->
                         <div id="step1Content">
                             <h5 class="text-center mb-3" data-lang="createAccount">Create Account</h5>
                             <form id="registerForm1">
@@ -219,20 +219,40 @@
                                     <label class="form-label" data-lang="fullName">Full Name</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                        <input type="text" class="form-control" id="regName" data-placeholder="enterName" placeholder="Enter Full Name" required>
+                                        <input type="text" class="form-control" id="regName" placeholder="Enter Full Name" required>
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label" data-lang="phoneOrEmail">Phone Number or Email</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                        <input type="text" class="form-control" id="regContact" data-placeholder="enterContact" placeholder="Enter Phone or Email" required>
+                                        <input type="text" class="form-control" id="regContact" placeholder="Enter Phone or Email" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Password</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                        <input type="password" class="form-control" id="regPassword" placeholder="Enter Password" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Confirm Password</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                        <input type="password" class="form-control" id="regConfirmPassword" placeholder="Confirm Password" required>
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-success w-100">
-                                    <i class="fas fa-paper-plane me-2"></i><span data-lang="sendOTP">Send OTP</span>
+                                    <i class="fas fa-user-plus me-2"></i><span>Register</span>
                                 </button>
                             </form>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <a href="#" onclick="showLoginSection()" class="text-success">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Login
+                            </a>
                         </div>
 
                         <!-- Step 2: OTP Verification -->

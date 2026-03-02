@@ -575,7 +575,7 @@
             
             // Update on server
             try {
-                const res = await fetch('http://localhost:5000/api/farmer-profile-update', {
+                const res = await fetch('/api/farmer-profile-update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ farmerId, name, phone, village, district, state, landSize, soilType, irrigationType, currentCrop })
@@ -732,7 +732,7 @@
 
         async function updateFromMap(lat, lon) {
             try {
-                const res = await fetch(`http://localhost:5000/api/weather-by-coords?lat=${lat}&lon=${lon}`);
+                const res = await fetch(`/api/weather-by-coords?lat=${lat}&lon=${lon}`);
                 const data = await res.json();
                 document.getElementById('villageSelect').value = data.location;
                 document.getElementById('locationInfo').style.display = 'block';
@@ -839,12 +839,12 @@
             
             try {
                 // Get risk data
-                const res = await fetch(`http://localhost:5000/api/exact-risk?village=${village}`);
+                const res = await fetch(`/api/exact-risk?village=${village}`);
                 currentData = await res.json();
                 updateDashboard(currentData);
                 
                 // Get forecast for charts
-                const forecastRes = await fetch(`http://localhost:5000/api/forecast?location=${village}`);
+                const forecastRes = await fetch(`/api/forecast?location=${village}`);
                 const forecastData = await forecastRes.json();
                 loadCharts(currentData, forecastData);
             } catch(e) {
@@ -929,7 +929,7 @@
             
             const village = document.getElementById('villageSelect')?.value || 'Coimbatore';
             try {
-                const res = await fetch(`http://localhost:5000/api/exact-risk?village=${village}`);
+                const res = await fetch(`/api/exact-risk?village=${village}`);
                 const data = await res.json();
                 
                 tbody.innerHTML = data.topCrops?.map((c, i) => `
@@ -950,7 +950,7 @@
         async function loadWeatherForecast() {
             const village = document.getElementById('villageSelect')?.value || 'Coimbatore';
             try {
-                const res = await fetch(`http://localhost:5000/api/forecast?location=${village}`);
+                const res = await fetch(`/api/forecast?location=${village}`);
                 const data = await res.json();
                 
                 document.getElementById('forecastBody').innerHTML = data.forecasts?.map(f => `
@@ -973,7 +973,7 @@
             alertsBody.innerHTML = '<p class="text-center">Loading alerts...</p>';
             
             try {
-                const res = await fetch(`http://localhost:5000/api/exact-risk?village=${village}`);
+                const res = await fetch(`/api/exact-risk?village=${village}`);
                 const data = await res.json();
                 
                 let alertsHtml = '';
@@ -1008,7 +1008,7 @@
             const village = document.getElementById('villageSelect')?.value || 'Coimbatore';
             
             try {
-                const res = await fetch(`http://localhost:5000/api/exact-risk?village=${village}`);
+                const res = await fetch(`/api/exact-risk?village=${village}`);
                 const data = await res.json();
                 
                 document.querySelector('#page-reports .stat-value')?.closest('.stats-grid')?.remove();

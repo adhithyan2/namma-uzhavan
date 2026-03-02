@@ -445,7 +445,7 @@
         // Load villages on page load
         async function loadVillages() {
             try {
-                const response = await fetch('http://localhost:5000/api/villages');
+                const response = await fetch('/api/villages');
                 const villages = await response.json();
                 
                 const select = document.getElementById('locationSelect');
@@ -477,7 +477,7 @@
             
             try {
                 // Get current weather
-                const weatherRes = await fetch(`http://localhost:5000/api/weather?location=${location}`);
+                const weatherRes = await fetch(`/api/weather?location=${location}`);
                 const weather = await weatherRes.json();
                 
                 document.getElementById('currentTemp').textContent = Math.round(weather.temperature) + '°C';
@@ -486,11 +486,11 @@
                 document.getElementById('windSpeed').textContent = Math.round(weather.windSpeed * 3.6) + ' km/h';
                 
                 // Get forecast for crop suggestions
-                const forecastRes = await fetch(`http://localhost:5000/api/forecast?location=${location}`);
+                const forecastRes = await fetch(`/api/forecast?location=${location}`);
                 const forecast = await forecastRes.json();
                 
                 // Get crop suggestions based on weather
-                const cropRes = await fetch(`http://localhost:5000/api/crop-suggestion?temperature=${weather.temperature}&rainfall=${weather.humidity}&soilType=Loamy&location=${location}`);
+                const cropRes = await fetch(`/api/crop-suggestion?temperature=${weather.temperature}&rainfall=${weather.humidity}&soilType=Loamy&location=${location}`);
                 const crops = await cropRes.json();
                 
                 // Update recommended crops section
@@ -564,7 +564,7 @@
                     const lon = position.coords.longitude;
                     
                     try {
-                        const response = await fetch(`http://localhost:5000/api/weather-by-coords?lat=${lat}&lon=${lon}`);
+                        const response = await fetch(`/api/weather-by-coords?lat=${lat}&lon=${lon}`);
                         const data = await response.json();
                         
                         document.getElementById('currentTemp').textContent = Math.round(data.temperature) + '°C';
@@ -573,7 +573,7 @@
                         document.getElementById('windSpeed').textContent = Math.round(data.windSpeed * 3.6) + ' km/h';
                         
                         // Get crop suggestions based on detected location
-                        const cropRes = await fetch(`http://localhost:5000/api/crop-suggestion?temperature=${data.temperature}&rainfall=${data.humidity}&soilType=Loamy&location=${data.location}`);
+                        const cropRes = await fetch(`/api/crop-suggestion?temperature=${data.temperature}&rainfall=${data.humidity}&soilType=Loamy&location=${data.location}`);
                         const crops = await cropRes.json();
                         updateCropSuggestions(crops, data);
                         

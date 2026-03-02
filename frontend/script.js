@@ -3,7 +3,7 @@
 // Main JavaScript
 // ========================================
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://localhost:5000/api'; // Empty = same domain (works for both local and deployed)
 let authToken = localStorage.getItem('token');
 let currentPage = window.location.pathname.split('/').pop();
 let tempChart = null;

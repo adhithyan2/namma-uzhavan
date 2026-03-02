@@ -1081,7 +1081,7 @@
                 let res;
                 if (editId) {
                     // Update existing farmer
-                    res = await fetch(`http://localhost:5000/api/farmers/${editId}`, {
+                    res = await fetch(`/api/farmers/${editId}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(farmer)
@@ -1092,7 +1092,7 @@
                     btn.innerHTML = '<i class="fas fa-save me-2"></i>Register Farmer';
                 } else {
                     // Register new farmer
-                    res = await fetch('http://localhost:5000/api/register-farmer', {
+                    res = await fetch('/api/register-farmer', {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(farmer)
                     });
@@ -1135,9 +1135,9 @@
         async function processVoiceQuery(query) {
             const q = query.toLowerCase(); let response = '';
             try {
-                const w = await (await fetch('http://localhost:5000/api/weather?location=Chittoor')).json();
-                const c = await (await fetch(`http://localhost:5000/api/crop-suggestion?temperature=${w.temperature}&rainfall=${w.humidity}&soilType=Loamy&location=Chittoor`)).json();
-                const farmers = await (await fetch('http://localhost:5000/api/farmers')).json();
+                const w = await (await fetch('/api/weather?location=Chittoor')).json();
+                const c = await (await fetch(`/api/crop-suggestion?temperature=${w.temperature}&rainfall=${w.humidity}&soilType=Loamy&location=Chittoor`)).json();
+                const farmers = await (await fetch('/api/farmers')).json();
                 
                 if (q.includes('farmer')) response = `You have ${farmers.length || 128} registered farmers.`;
                 else if (q.includes('crop')) response = `Recommended crop: ${c.suggestions[0].crop} (${c.suggestions[0].score}% match).`;
@@ -1154,7 +1154,7 @@
         async function loadWeatherData() {
             const village = localStorage.getItem('agentVillage') || 'Chittoor';
             try {
-                const w = await (await fetch(`http://localhost:5000/api/weather?location=${village}`)).json();
+                const w = await (await fetch(`/api/weather?location=${village}`)).json();
                 document.getElementById('mainTemp').textContent = Math.round(w.temperature) + '°C';
                 document.getElementById('mainCondition').textContent = w.weatherCondition;
                 document.getElementById('mainLocation').textContent = w.location + ', AP';
@@ -1178,7 +1178,7 @@
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const { latitude, longitude } = pos.coords;
                 try {
-                    const res = await fetch(`http://localhost:5000/api/weather-by-coords?lat=${latitude}&lon=${longitude}`);
+                    const res = await fetch(`/api/weather-by-coords?lat=${latitude}&lon=${longitude}`);
                     const data = await res.json();
                     document.getElementById('agentVillageSelect').value = data.location;
                     document.getElementById('agentLocationInfo').innerHTML = `<small class="text-success"><i class="fas fa-check-circle"></i> Detected: ${data.location} (${Math.round(data.temperature)}°C)</small>`;
@@ -1200,7 +1200,7 @@
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const { latitude, longitude } = pos.coords;
                 try {
-                    const res = await fetch(`http://localhost:5000/api/weather-by-coords?lat=${latitude}&lon=${longitude}`);
+                    const res = await fetch(`/api/weather-by-coords?lat=${latitude}&lon=${longitude}`);
                     const data = await res.json();
                     
                     document.getElementById('village').value = data.location || '';
@@ -1244,7 +1244,7 @@
         async function loadFarmers() {
             console.log('Loading farmers...');
             try {
-                const res = await fetch('http://localhost:5000/api/farmers');
+                const res = await fetch('/api/farmers');
                 console.log('Response status:', res.status);
                 const farmers = await res.json();
                 console.log('Farmers loaded:', farmers.length);
@@ -1290,7 +1290,7 @@
 
         window.editFarmer = async function(id) {
             try {
-                const res = await fetch(`http://localhost:5000/api/farmers/${id}`);
+                const res = await fetch(`/api/farmers/${id}`);
                 const farmer = await res.json();
                 
                 if (!farmer) { showError('Not Found', 'Farmer not found'); return; }
@@ -1326,7 +1326,7 @@
             if (!confirmed) return;
             
             showLoading('Deleting farmer...');
-            fetch(`http://localhost:5000/api/farmers/${id}`, { method: 'DELETE' })
+            fetch(`/api/farmers/${id}`, { method: 'DELETE' })
             .then(res => res.json())
             .then(data => {
                 hideLoading();
@@ -1345,7 +1345,7 @@
 
         async function loadAgentVillages() {
             try {
-                const res = await fetch('http://localhost:5000/api/villages');
+                const res = await fetch('/api/villages');
                 const villages = await res.json();
                 const select = document.getElementById('agentVillageSelect');
                 villages.slice(0, 20).forEach(v => {
@@ -1465,7 +1465,7 @@
         let currentFarmersData = [];
         async function updateMonitoringFromFarmers() {
             try {
-                const res = await fetch('http://localhost:5000/api/farmers');
+                const res = await fetch('/api/farmers');
                 const farmers = await res.json();
                 currentFarmersData = farmers;
                 
@@ -1509,7 +1509,7 @@
 
         async function updateReportsFromFarmers() {
             try {
-                const res = await fetch('http://localhost:5000/api/farmers');
+                const res = await fetch('/api/farmers');
                 const farmers = await res.json();
                 
                 document.querySelector('#page-reports .stat-card:nth-child(1) .stat-value').textContent = farmers.length;
@@ -1537,7 +1537,7 @@
 
         async function updateClimateFromFarmers() {
             try {
-                const res = await fetch('http://localhost:5000/api/weather-by-coords?lat=13.6288&lon=79.4191');
+                const res = await fetch('/api/weather-by-coords?lat=13.6288&lon=79.4191');
                 const weather = await res.json();
                 document.getElementById('mainTemp').textContent = Math.round(weather.temperature) + '°C';
                 document.getElementById('mainCondition').textContent = weather.weatherCondition || 'Clear';
@@ -1569,7 +1569,7 @@
                 currentAgentLon = position.coords.longitude;
                 
                 try {
-                    const res = await fetch(`http://localhost:5000/api/weather-by-coords?lat=${currentAgentLat}&lon=${currentAgentLon}`);
+                    const res = await fetch(`/api/weather-by-coords?lat=${currentAgentLat}&lon=${currentAgentLon}`);
                     const weather = await res.json();
                     const locationName = weather.location || 'Your Location';
                     document.getElementById('agentLocationInfo').innerHTML = `<div class="alert-success"><i class="fas fa-check-circle"></i> Detected: ${locationName} (${currentAgentLat.toFixed(4)}, ${currentAgentLon.toFixed(4)})</div>`;
@@ -1595,7 +1595,7 @@
 
         async function loadNearbyFarmersOnMap() {
             try {
-                const res = await fetch('http://localhost:5000/api/farmers');
+                const res = await fetch('/api/farmers');
                 const farmers = await res.json();
                 
                 agentMarkers.forEach(m => agentMap.removeLayer(m));
@@ -1641,7 +1641,7 @@
         async function filterFarmersOnMap() {
             const village = document.getElementById('mapVillageFilter').value;
             try {
-                const res = await fetch('http://localhost:5000/api/farmers');
+                const res = await fetch('/api/farmers');
                 let farmers = await res.json();
                 
                 if (village) {
@@ -1691,7 +1691,7 @@
             listContainer.innerHTML = '<div class="col-12 text-center text-muted py-4"><i class="fas fa-spinner fa-spin me-2"></i> Loading nearby farmers...</div>';
             
             try {
-                const res = await fetch('http://localhost:5000/api/farmers');
+                const res = await fetch('/api/farmers');
                 let farmers = await res.json();
                 
                 // Use agent location or default

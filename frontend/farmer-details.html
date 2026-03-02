@@ -141,7 +141,7 @@
             document.getElementById('farmerId').textContent = 'ID: ' + farmerId;
 
             try {
-                const res = await fetch('http://localhost:5000/api/farmers/' + farmerId);
+                const res = await fetch('/api/farmers/' + farmerId);
                 const farmer = await res.json();
 
                 if (!farmer || farmer.error) {

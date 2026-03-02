@@ -177,7 +177,7 @@
     <script>
         async function loadWeatherData() {
             try {
-                const response = await fetch('http://localhost:5000/api/weather?location=Chittoor');
+                const response = await fetch('/api/weather?location=Chittoor');
                 const data = await response.json();
                 
                 document.getElementById('currentTemp').textContent = Math.round(data.temperature) + '°C';
@@ -187,7 +187,7 @@
                 document.getElementById('location').textContent = data.location + ', AP';
 
                 // Get forecast
-                const forecastRes = await fetch('http://localhost:5000/api/forecast?location=Chittoor');
+                const forecastRes = await fetch('/api/forecast?location=Chittoor');
                 const forecast = await forecastRes.json();
                 
                 if (forecast.forecasts) {

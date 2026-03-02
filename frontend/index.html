@@ -453,30 +453,54 @@
             }
         }
 
-        // Step 1: Send OTP
-        document.getElementById('registerForm1').addEventListener('submit', function(e) {
+        // Register: Single step with API
+        document.getElementById('registerForm1').addEventListener('submit', async function(e) {
             e.preventDefault();
             const name = document.getElementById('regName').value;
             const contact = document.getElementById('regContact').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
             
-            if (!name || !contact) {
+            if (!name || !contact || !password) {
                 alert('Please fill all fields');
                 return;
             }
 
-            registrationData.name = name;
-            registrationData.contact = contact;
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
 
-            // Simulate sending OTP
-            document.getElementById('otpSentTo').textContent = (loginLang[document.getElementById('langSelect').value] || loginLang.en).otpSent + ' ' + contact;
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters');
+                return;
+            }
             
-            document.getElementById('step1Content').style.display = 'none';
-            document.getElementById('step2Content').style.display = 'block';
-            currentStep = 2;
-            updateStepIndicator();
-
-            // Auto-fill demo OTP
-            document.getElementById('regOTP').value = '123456';
+            const btn = e.target.querySelector('button');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Registering...';
+            
+            try {
+                const res = await fetch('/api/farmer-register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, contact, password })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert('Registration successful! Please login.');
+                    showLoginSection();
+                } else {
+                    alert(data.error || 'Registration failed');
+                }
+            } catch(err) {
+                alert('Registration error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-plus me-2"></i>Register';
+            }
         });
 
         // Step 2: Verify OTP
@@ -530,7 +554,7 @@
         });
 
         // Login handlers
-        function farmerLogin() {
+        async function farmerLogin() {
             const id = document.getElementById('farmerId').value;
             const pass = document.getElementById('farmerPassword').value;
             
@@ -539,15 +563,25 @@
                 return;
             }
             
-            const farmers = JSON.parse(localStorage.getItem('registeredFarmers') || '[]');
-            const farmer = farmers.find(f => (f.contact === id || f.farmerId === id) && f.password === pass);
-            
-            if (farmer) {
-                localStorage.setItem('farmerId', farmer.farmerId);
-                window.location.href = 'smart-dashboard.html';
-            } else {
-                localStorage.setItem('farmerId', id);
-                window.location.href = 'smart-dashboard.html';
+            try {
+                const res = await fetch('/api/farmer-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contact: id, password: pass })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    localStorage.setItem('farmerId', data.farmerId);
+                    localStorage.setItem('farmerName', data.name);
+                    localStorage.setItem('farmerPhone', data.phone || '');
+                    window.location.href = 'smart-dashboard.html';
+                } else {
+                    alert(data.error || 'Login failed');
+                }
+            } catch(err) {
+                alert('Server error. Please try again.');
             }
         }
 

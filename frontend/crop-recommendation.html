@@ -139,7 +139,7 @@
             
             try {
                 // Get weather data
-                const weatherRes = await fetch(`http://localhost:5000/api/weather?location=${location}`);
+                const weatherRes = await fetch(`/api/weather?location=${location}`);
                 currentWeather = await weatherRes.json();
                 
                 // Update weather display
@@ -148,7 +148,7 @@
                 document.getElementById('currentCondition').textContent = currentWeather.weatherCondition;
                 
                 // Get crop suggestions
-                const cropRes = await fetch(`http://localhost:5000/api/crop-suggestion?temperature=${currentWeather.temperature}&rainfall=${currentWeather.humidity}&soilType=Loamy&location=${location}`);
+                const cropRes = await fetch(`/api/crop-suggestion?temperature=${currentWeather.temperature}&rainfall=${currentWeather.humidity}&soilType=Loamy&location=${location}`);
                 const cropData = await cropRes.json();
                 
                 // Update risk level
@@ -251,7 +251,7 @@
                     const lon = position.coords.longitude;
                     
                     try {
-                        const response = await fetch(`http://localhost:5000/api/weather-by-coords?lat=${lat}&lon=${lon}`);
+                        const response = await fetch(`/api/weather-by-coords?lat=${lat}&lon=${lon}`);
                         const data = await response.json();
                         
                         document.getElementById('locationSelect').value = data.location;

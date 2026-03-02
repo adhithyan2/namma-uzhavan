@@ -415,7 +415,7 @@
         // Fetch farmers from backend
         async function loadFarmers() {
             try {
-                const response = await fetch('http://localhost:5000/api/farmers');
+                const response = await fetch('/api/farmers');
                 allFarmers = await response.json();
                 
                 // Also check localStorage for backup
@@ -465,11 +465,11 @@
         async function loadWeather() {
             try {
                 // Get weather for Chittoor (default location)
-                const response = await fetch('http://localhost:5000/api/weather?location=Chittoor');
+                const response = await fetch('/api/weather?location=Chittoor');
                 const data = await response.json();
                 
                 // Get forecast
-                const forecastResponse = await fetch('http://localhost:5000/api/forecast?location=Chittoor');
+                const forecastResponse = await fetch('/api/forecast?location=Chittoor');
                 const forecastData = await forecastResponse.json();
                 
                 // Update forecast display
@@ -500,7 +500,7 @@
                 }
 
                 // Get crop suggestions
-                const cropResponse = await fetch(`http://localhost:5000/api/crop-suggestion?temperature=${data.temperature}&rainfall=${data.humidity}&soilType=Loamy&location=Chittoor`);
+                const cropResponse = await fetch(`/api/crop-suggestion?temperature=${data.temperature}&rainfall=${data.humidity}&soilType=Loamy&location=Chittoor`);
                 const cropData = await cropResponse.json();
                 updateBoothCropRecommendations(cropData);
                 

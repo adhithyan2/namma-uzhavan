@@ -315,7 +315,7 @@
         // Fetch farmers from backend
         async function loadFarmers() {
             try {
-                const response = await fetch('http://localhost:5000/api/farmers');
+                const response = await fetch('/api/farmers');
                 farmers = await response.json();
                 
                 // Also check localStorage for backup

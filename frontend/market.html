@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Prices - Farmers Helping Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-green: #1b5e20;
+            --secondary-green: #2e7d32;
+            --light-green: #4caf50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f9f5;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+        }
+
+        .price-card {
+            border: none;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .price-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .price-up {
+            color: #28a745;
+        }
+
+        .price-down {
+            color: #dc3545;
+        }
+
+        .price-table {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .market-badge {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.6rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="dashboard.html">
+                <i class="fas fa-leaf me-2"></i>Farmers Portal
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html"><i class="fas fa-home me-1"></i>Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="schemes.html"><i class="fas fa-gift me-1"></i>Schemes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="crop-advisory.html"><i class="fas fa-seedling me-1"></i>Crop Advisory</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="market.html"><i class="fas fa-chart-line me-1"></i>Market Prices</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <a href="index.html" class="btn btn-outline-light btn-sm" onclick="logout()">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h4><i class="fas fa-chart-line me-2 text-success"></i>Market Prices</h4>
+                <p class="text-muted">Latest wholesale prices from mandis across India</p>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" id="marketSelect" onchange="updatePrices()">
+                    <option value="all">All Markets</option>
+                    <option value="delhi">Delhi</option>
+                    <option value="mumbai">Mumbai</option>
+                    <option value="chennai">Chennai</option>
+                    <option value="kolkata">Kolkata</option>
+                    <option value="hyderabad">Hyderabad</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- MSP Banner -->
+        <div class="alert alert-success d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <i class="fas fa-shield-alt me-2"></i>
+                <strong>MSP Guaranteed:</strong> Government ensures Minimum Support Price for paddy, wheat, cotton, and pulses
+            </div>
+            <button class="btn btn-success btn-sm">View MSP</button>
+        </div>
+
+        <!-- Price Categories -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <ul class="nav nav-pills" id="priceTabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#all">
+                            <i class="fas fa-th-large me-1"></i>All
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#cereals">
+                            <i class="fas fa-bread-slice me-1"></i>Cereals
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#vegetables">
+                            <i class="fas fa-carrot me-1"></i>Vegetables
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#fruits">
+                            <i class="fas fa-apple-alt me-1"></i>Fruits
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pulses">
+                            <i class="fas fa-seedling me-1"></i>Pulses
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Price Table -->
+        <div class="card price-table">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-success">
+                            <tr>
+                                <th>Crop</th>
+                                <th>Variety</th>
+                                <th>Market</th>
+                                <th>Price (Rs/Qtl)</th>
+                                <th>Change</th>
+                                <th>MSP</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="priceTable">
+                            <!-- Cereals -->
+                            <tr data-category="cereals">
+                                <td><strong>Paddy</strong></td>
+                                <td>Common</td>
+                                <td><span class="badge bg-secondary market-badge">Hyderabad</span></td>
+                                <td>2,183</td>
+                                <td class="price-up"><i class="fas fa-arrow-up"></i> 3%</td>
+                                <td><span class="badge bg-success">2,183</span></td>
+                                <td><button class="btn btn-sm btn-outline-success">Sell</button></td>
+                            </tr>
+                            <tr data-category="cereals">
+                                <td><strong>Wheat</strong></td>
+                                <td>Local</td>
+                                <td><span class="badge bg-secondary market-badge">Delhi</span></td>
+                                <td>2,275</td>
+                                <td class="price-up"><i class="fas fa-arrow-up"></i> 1%</td>
+                                <td><span class="badge bg-success">2,275</span></td>
+                                <td><button class="btn btn-sm btn-outline-success">Sell</button></td>
+                            </tr>
+                            <tr data-category="cereals">
+                                <td><strong>Maize</strong></td>
+                                <td>Yellow</td>
+                                <td><span class="badge bg-secondary market-badge">Mumbai</span></td>
+                                <td>1,962</td>
+                                <td class="price-down"><i class="fas fa-arrow-down"></i> 2%</td>
+                                <td><span class="badge bg-success">1,962</span></td>
+                                <td><button class="btn btn-sm btn-outline-success">Sell</button></td>
+                            </tr>
+                            <!-- Vegetables -->
+                            <tr data-category="vegetables">
+                                <td><strong>Tomato</strong></td>
+                                <td>Local</td>
+                                <td><span class="badge bg-secondary market-badge">Delhi</span></td>
+                                <td>1,800</td>
+                                <td class="price-up"><i class="fas fa-arrow-up"></i> 12%</td>
+                                <td>-</td>
+                                <td><button class="btn btn-sm btn-outline-success">Sell</button></td>
+                            </tr>
+                            <tr data-category="vegetables">
+                                <td><strong>Onion</strong></td>
+                                <td>Red</td>
+                                <td><span class="badge bg-secondary market-badge">Mumbai</span></td>
+                                <td>2,500</td>
+                                <td class="price-up"><i class="fas fa-arrow-up"></i> 8%</td>
+                                <td>-</td>
+                                <td><button class="btn btn-sm btn-outline-success">Sell</button></td>
+                            </tr>
+                            <tr data-category="vegetables">
+                                <td><strong>Potato</strong></td>
+                                <td>Local</td>
+                                <td><span class="badge bg-secondary market-badge">Kolkata</span></td>
+                                <td>1,200</td>
+                                <td class="price-down"><i class="fas fa-arrow-down"></i> 3%</td>
+                                <td>-</td>
+                                <td><button class="btn btn-sm btn-outline-success">Sell</button></td>
+                            </tr>
+                            <!-- Pulses -->
+                            <tr data-category="pulses">
+                                <td><strong>Tur (Arhar)</strong></td>
+                                <td>Local</td>
+                                <td><span class="badge bg-secondary market-badge">Hyderabad</span></td>
+                                <td>6,600</td>
+                                <td class="price-up"><i class="fas fa-arrow-up"></i> 2%</td>
+                                <td><span class="badge bg-success">6,600</span></td>
+                                <td><button class="btn btn-sm btn-outline-success">Sell</button></td>
+                            </tr>
+                            <tr data-category="pulses">
+                                <td><strong>Moong</strong></td>
+                                <td>Green</td>
+                                <td><span class="badge bg-secondary market-badge">Delhi</span></td>
+                                <td>7,400</td>
+                                <td class="price-down"><i class="fas fa-arrow-down"></i> 1%</td>
+                                <td><span class="badge bg-success">7,196</span></td>
+                                <td><button class="btn btn-sm btn-outline-success">Sell</button></td>
+                            </tr>
+                            <!-- Fruits -->
+                            <tr data-category="fruits">
+                                <td><strong>Mango</strong></td>
+                                <td>Alphonso</td>
+                                <td><span class="badge bg-secondary market-badge">Mumbai</span></td>
+                                <td>4,500</td>
+                                <td class="price-down"><i class="fas fa-arrow-down"></i> 5%</td>
+                                <td>-</td>
+                                <td><button class="btn btn-sm btn-outline-success">Sell</button></td>
+                            </tr>
+                            <tr data-category="fruits">
+                                <td><strong>Banana</strong></td>
+                                <td>Robusta</td>
+                                <td><span class="badge bg-secondary market-badge">Chennai</span></td>
+                                <td>1,800</td>
+                                <td class="price-up"><i class="fas fa-arrow-up"></i> 2%</td>
+                                <td>-</td>
+                                <td><button class="btn btn-sm btn-outline-success">Sell</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Price Trends -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0"><i class="fas fa-chart-line text-success me-2"></i>Price Trends - Paddy</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center py-3">
+                            <small class="text-muted">Last 7 days trend</small>
+                            <div class="d-flex justify-content-between align-items-end mt-2" style="height: 100px;">
+                                <div class="bg-success" style="width: 12%; height: 60%;"></div>
+                                <div class="bg-success" style="width: 12%; height: 70%;"></div>
+                                <div class="bg-success" style="width: 12%; height: 65%;"></div>
+                                <div class="bg-success" style="width: 12%; height: 75%;"></div>
+                                <div class="bg-success" style="width: 12%; height: 80%;"></div>
+                                <div class="bg-success" style="width: 12%; height: 85%;"></div>
+                                <div class="bg-success" style="width: 12%; height: 90%;"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small>Mon</small><small>Tue</small><small>Wed</small><small>Thu</small><small>Fri</small><small>Sat</small><small>Sun</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0"><i class="fas fa-chart-line text-success me-2"></i>Price Trends - Tomato</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center py-3">
+                            <small class="text-muted">Last 7 days trend</small>
+                            <div class="d-flex justify-content-between align-items-end mt-2" style="height: 100px;">
+                                <div class="bg-warning" style="width: 12%; height: 90%;"></div>
+                                <div class="bg-warning" style="width: 12%; height: 85%;"></div>
+                                <div class="bg-warning" style="width: 12%; height: 70%;"></div>
+                                <div class="bg-warning" style="width: 12%; height: 60%;"></div>
+                                <div class="bg-warning" style="width: 12%; height: 55%;"></div>
+                                <div class="bg-warning" style="width: 12%; height: 50%;"></div>
+                                <div class="bg-warning" style="width: 12%; height: 65%;"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small>Mon</small><small>Tue</small><small>Wed</small><small>Thu</small><small>Fri</small><small>Sat</small><small>Sun</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buy/Sell Section -->
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                        <h5>Buy Inputs</h5>
+                        <p class="mb-3">Seeds, fertilizers, pesticides at competitive prices</p>
+                        <button class="btn btn-light">Browse Marketplace</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center py-4">
+                        <i class="fas fa-tags fa-3x mb-3"></i>
+                        <h5>Sell Your Produce</h5>
+                        <p class="mb-3">Find best prices in nearby mandis</p>
+                        <button class="btn btn-light">Post Your Produce</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updatePrices() {
+            alert('Filtering prices for selected market...');
+        }
+
+        // Filter by category
+        document.querySelectorAll('.nav-pills .nav-link').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function(e) {
+                const category = e.target.dataset.bsTarget.replace('#', '');
+                const rows = document.querySelectorAll('#priceTable tr');
+                
+                rows.forEach(row => {
+                    if (category === 'all' || row.dataset.category === category) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+
+        function logout() {
+            sessionStorage.clear();
+        }
+    </script>
+</body>
+</html>

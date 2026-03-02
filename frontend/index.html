@@ -3,133 +3,574 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Climate Risk Adaptive Crop Strategy Engine - Login</title>
+    <title>Namma Uzhavan - Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary-green: #1b5e20;
+            --secondary-green: #2e7d32;
+            --light-green: #4caf50;
+            --accent-green: #81c784;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(160deg, #1e5631 0%, #0f3d1f 50%, #0a2914 100%);
+            min-height: 100vh;
+        }
+        .login-card {
+            background: rgba(255,255,255,0.98);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .btn-success {
+            background: var(--primary-green);
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .btn-success:hover {
+            background: var(--secondary-green);
+        }
+        .form-control:focus {
+            border-color: var(--light-green);
+            box-shadow: 0 0 0 0.2rem rgba(76,175,80,0.25);
+        }
+        .brand-title {
+            color: var(--primary-green);
+            font-weight: 700;
+        }
+        .lang-select {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.95);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            color: #1b5e20;
+            font-weight: 500;
+            z-index: 100;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .step {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin: 0 5px;
+            transition: all 0.3s;
+        }
+        .step.active {
+            background: var(--primary-green);
+            color: white;
+        }
+        .step.completed {
+            background: var(--light-green);
+            color: white;
+        }
+        .step-line {
+            height: 2px;
+            width: 30px;
+            background: #e9ecef;
+            align-self: center;
+            margin: 0 5px;
+        }
+        .step-line.active {
+            background: var(--primary-green);
+        }
+        .otp-input {
+            letter-spacing: 10px;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+        .resend-link {
+            color: var(--primary-green);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .resend-link:hover {
+            color: var(--secondary-green);
+        }
+        .password-toggle {
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <div class="container-fluid vh-100">
-        <div class="row h-100">
-            <!-- Left Side - Branding -->
-            <div class="col-lg-6 left-section d-none d-lg-flex flex-column justify-content-center align-items-center text-white">
-                <div class="text-center p-5">
-                    <i class="fas fa-leaf logo-icon mb-4"></i>
-                    <h1 class="display-4 fw-bold mb-3">Climate Risk Adaptive</h1>
-                    <h2 class="h3 mb-4">Crop Strategy Engine</h2>
-                    <p class="lead px-5">Smart farming solutions powered by climate data, AI predictions, and sustainable practices.</p>
-                    <div class="mt-5 feature-icons">
-                        <div class="feature-item">
-                            <i class="fas fa-cloud-sun"></i>
-                            <span>Weather Intelligence</span>
+    <select class="lang-select" id="langSelect" onchange="changeLang(this.value)">
+        <option value="en">English</option>
+        <option value="ta">தமிழ்</option>
+        <option value="hi">हिन्दी</option>
+        <option value="te">Telugu</option>
+        <option value="kn">ಕನ್ನಡ</option>
+        <option value="ml">മലയാളം</option>
+    </select>
+
+    <div class="container-fluid vh-100 d-flex align-items-center justify-content-center py-4">
+        <div class="row w-100 justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="text-center mb-4">
+                    <a href="intro.html" class="text-decoration-none">
+                        <i class="fas fa-leaf fa-3x text-success"></i>
+                        <h2 class="brand-title mt-2" style="color:#fff;text-shadow:0 2px 10px rgba(0,0,0,0.3);">Namma Uzhavan</h2>
+                    </a>
+                    <p class="text-white-50" id="pageTitle" style="text-shadow:0 1px 3px rgba(0,0,0,0.3);">Smart Farmers Helping Portal</p>
+                </div>
+
+                <div class="login-card p-4">
+                    <!-- Login Section -->
+                    <div id="loginSection">
+                        <ul class="nav nav-pills mb-4 justify-content-center" role="tablist">
+                            <li class="nav-item">
+                                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#farmer-login">
+                                    <i class="fas fa-user me-2"></i><span data-lang="farmer">Farmer</span>
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#agent-login">
+                                    <i class="fas fa-user-tie me-2"></i><span data-lang="agent">Agent</span>
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="farmer-login">
+                                <form id="farmerLoginForm">
+                                    <div class="mb-3">
+                                        <label class="form-label" data-lang="phoneOrId">Phone / Farmer ID</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                            <input type="text" class="form-control" id="farmerId" data-placeholder="enterPhone" placeholder="Enter Phone or ID" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" data-lang="password">Password</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                            <input type="password" class="form-control" id="farmerPassword" data-placeholder="enterPassword" placeholder="Enter Password" required>
+                                            <button class="btn btn-outline-secondary password-toggle" type="button" onclick="togglePassword('farmerPassword')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-success w-100" onclick="farmerLogin()">
+                                        <i class="fas fa-sign-in-alt me-2"></i><span data-lang="loginFarmer">Login as Farmer</span>
+                                    </button>
+                                </form>
+                                    <div class="text-center mt-3">
+                                <span class="text-success" style="cursor:pointer;text-decoration:underline;" onclick="showRegisterModal()" data-lang="registerFarmer">Register as Farmer</span>
+                            </div>
+                            </div>
+                            <div class="tab-pane fade" id="agent-login">
+                                <form id="agentLoginForm">
+                                    <div class="mb-3">
+                                        <label class="form-label" data-lang="agentId">Agent ID</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                                            <input type="text" class="form-control" id="agentId" placeholder="Enter Agent ID" required>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" data-lang="password">Password</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                            <input type="password" class="form-control" id="agentPassword" placeholder="Enter Password" required>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-success w-100" onclick="agentLogin()">
+                                        <i class="fas fa-sign-in-alt me-2"></i><span data-lang="loginAgent">Login as Agent</span>
+                                    </button>
+                                </form>
+                                <div class="text-center mt-3">
+                                    <small class="text-muted">Demo: AGT001 / agent123</small>
+                                </div>
+                            </div>
                         </div>
-                        <div class="feature-item">
-                            <i class="fas fa-seedling"></i>
-                            <span>Crop Suggestions</span>
+                    </div>
+
+                    <!-- Registration Section -->
+                    <div id="registerSection" style="display:none;">
+                        <div class="step-indicator">
+                            <div class="step active" id="step1">1</div>
+                            <div class="step-line" id="line1"></div>
+                            <div class="step" id="step2">2</div>
+                            <div class="step-line" id="line2"></div>
+                            <div class="step" id="step3">3</div>
                         </div>
-                        <div class="feature-item">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span>Smart Marketplace</span>
+
+                        <!-- Step 1: Basic Info -->
+                        <div id="step1Content">
+                            <h5 class="text-center mb-3" data-lang="createAccount">Create Account</h5>
+                            <form id="registerForm1">
+                                <div class="mb-3">
+                                    <label class="form-label" data-lang="fullName">Full Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                        <input type="text" class="form-control" id="regName" data-placeholder="enterName" placeholder="Enter Full Name" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" data-lang="phoneOrEmail">Phone Number or Email</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                        <input type="text" class="form-control" id="regContact" data-placeholder="enterContact" placeholder="Enter Phone or Email" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-paper-plane me-2"></i><span data-lang="sendOTP">Send OTP</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Step 2: OTP Verification -->
+                        <div id="step2Content" style="display:none;">
+                            <h5 class="text-center mb-3" data-lang="verifyOTP">Verify OTP</h5>
+                            <p class="text-center text-muted small" id="otpSentTo">OTP sent to</p>
+                            <form id="registerForm2">
+                                <div class="mb-3">
+                                    <label class="form-label" data-lang="enterOTP">Enter 6-digit OTP</label>
+                                    <input type="text" class="form-control otp-input" id="regOTP" maxlength="6" data-placeholder="enterOTP" placeholder="------" required>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-check-circle me-2"></i><span data-lang="verify">Verify OTP</span>
+                                </button>
+                                <p class="text-center mt-3">
+                                    <span data-lang="notReceived">Didn't receive?</span> 
+                                    <span class="resend-link" onclick="resendOTP()" data-lang="resendOTP">Resend OTP</span>
+                                </p>
+                            </form>
+                        </div>
+
+                        <!-- Step 3: Set Password -->
+                        <div id="step3Content" style="display:none;">
+                            <h5 class="text-center mb-3" data-lang="setPassword">Set Password</h5>
+                            <form id="registerForm3">
+                                <div class="mb-3">
+                                    <label class="form-label" data-lang="newPassword">New Password</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                        <input type="password" class="form-control" id="regPassword" data-placeholder="enterNewPassword" placeholder="Enter New Password" required>
+                                        <button class="btn btn-outline-secondary password-toggle" type="button" onclick="togglePassword('regPassword')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" data-lang="confirmPassword">Confirm Password</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                        <input type="password" class="form-control" id="regConfirmPassword" data-placeholder="confirmPassword" placeholder="Confirm Password" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-user-plus me-2"></i><span data-lang="completeReg">Complete Registration</span>
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <a href="#" onclick="showLoginSection()" class="text-success">
+                                <i class="fas fa-arrow-left me-1"></i><span data-lang="backToLogin">Back to Login</span>
+                            </a>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Right Side - Login/Signup Form -->
-            <div class="col-lg-6 right-section d-flex flex-column justify-content-center align-items-center">
-                <div class="form-container w-100 px-4" style="max-width: 450px;">
-                    <div class="text-center mb-4">
-                        <h3 class="fw-bold text-success">Welcome Back</h3>
-                        <p class="text-muted">Sign in to access your farm dashboard</p>
-                    </div>
-
-                    <!-- Toggle Buttons -->
-                    <div class="toggle-buttons d-flex mb-4">
-                        <button class="btn btn-success flex-fill active" id="loginBtn" onclick="showForm('login')">Login</button>
-                        <button class="btn btn-outline-success flex-fill" id="signupBtn" onclick="showForm('signup')">Sign Up</button>
-                    </div>
-
-                    <!-- Login Form -->
-                    <form id="loginForm" onsubmit="handleLogin(event)">
-                        <div class="mb-3">
-                            <label class="form-label">Email Address</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                                <input type="email" class="form-control" id="loginEmail" required placeholder="Enter your email">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                <input type="password" class="form-control" id="loginPassword" required placeholder="Enter your password">
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('loginPassword')">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="rememberMe">
-                            <label class="form-check-label" for="rememberMe">Remember me</label>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
-                            <span class="spinner-border spinner-border-sm d-none" id="loginSpinner"></span>
-                            <span id="loginBtnText">Login</span>
-                        </button>
-                    </form>
-
-                    <!-- Signup Form -->
-                    <form id="signupForm" class="d-none" onsubmit="handleSignup(event)">
-                        <div class="mb-3">
-                            <label class="form-label">Full Name</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                <input type="text" class="form-control" id="signupName" required placeholder="Enter your name">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email Address</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                                <input type="email" class="form-control" id="signupEmail" required placeholder="Enter your email">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                <input type="password" class="form-control" id="signupPassword" required placeholder="Create a password" minlength="6">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Confirm Password</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                <input type="password" class="form-control" id="signupConfirmPassword" required placeholder="Confirm your password">
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
-                            <span class="spinner-border spinner-border-sm d-none" id="signupSpinner"></span>
-                            <span id="signupBtnText">Create Account</span>
-                        </button>
-                    </form>
-
-                    <!-- Guest Mode Button -->
-                    <div class="text-center mt-4">
-                        <div class="divider"><span>or</span></div>
-                        <button class="btn btn-outline-secondary w-100 py-2 fw-bold" onclick="enterGuestMode()">
-                            <i class="fas fa-user-clock me-2"></i>Skip for Now - Guest Mode
-                        </button>
-                        <small class="text-muted d-block mt-2">Guest mode has limited features</small>
-                    </div>
-
-                    <div id="authMessage" class="alert mt-3 d-none"></div>
+                <div class="text-center mt-4">
+                    <a href="intro.html" class="text-white" style="text-shadow:0 1px 3px rgba(0,0,0,0.5);">
+                        <i class="fas fa-arrow-left me-1"></i><span data-lang="backToHome">Back to Home</span>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="script.js"></script>
+    <script>
+        // Language translations
+        const loginLang = {
+            en: {
+                farmer: "Farmer", agent: "Agent", loginFarmer: "Login as Farmer", loginAgent: "Login as Agent",
+                registerFarmer: "Register as Farmer", phoneOrId: "Phone / Farmer ID", phoneOrEmail: "Phone Number or Email",
+                password: "Password", agentId: "Agent ID", enterPhone: "Enter Phone or ID", enterPassword: "Enter Password",
+                createAccount: "Create Account", fullName: "Full Name", enterName: "Enter Full Name", enterContact: "Enter Phone or Email",
+                sendOTP: "Send OTP", verifyOTP: "Verify OTP", enterOTP: "Enter 6-digit OTP", verify: "Verify OTP",
+                notReceived: "Didn't receive?", resendOTP: "Resend OTP", setPassword: "Set Password", newPassword: "New Password",
+                confirmPassword: "Confirm Password", enterNewPassword: "Enter New Password", completeReg: "Complete Registration",
+                backToLogin: "Back to Login", backToHome: "Back to Home", title: "Smart Farmers Helping Portal",
+                otpSent: "OTP sent to", demo: "Demo: AGT001 / agent123"
+            },
+            ta: {
+                farmer: "விவசாயி", agent: "ஏஜெண்ட்", loginFarmer: "விவசாயியாக உள்நுழை", loginAgent: "ஏஜெண்டாக உள்நுழை",
+                registerFarmer: "விவசாசியாக பதிவு செய்", phoneOrId: "தொலைப்பேசி / விவசாசி ID", phoneOrEmail: "தொலைப்பேசி அல்லது மின்னஞ்சல்",
+                password: "கடவுச்சொல்", agentId: "ஏஜெண்ட் ID", enterPhone: "தொலைப்பேசி / ID உள்ளிடு", enterPassword: "கடவுச்சொல் உள்ளிடு",
+                createAccount: "கண்டவ உருவாக்கு", fullName: "முழு பெயர்", enterName: "முழு பெயரை உள்ளிடு", enterContact: "தொலைப்பேசி / மின்னஞ்சல் உள்ளிடு",
+                sendOTP: "OTP அனுப்பு", verifyOTP: "OTP சரிபார்", enterOTP: "6 இலக்க OTP உள்ளிடு", verify: "OTP சரிபார்",
+                notReceived: "பெறவில்லை?", resendOTP: "OTP மீண்டும் அனுப்பு", setPassword: "கடவுச்சொல் அமை", newPassword: "புதிய கடவுச்சொல்",
+                confirmPassword: "கடவுச்சொல் உறுதிப்படுத்து", enterNewPassword: "புதிய கடவுச்சொல் உள்ளிடு", completeReg: "பதிவு முடி",
+                backToLogin: "லாகினுக்கு திரும்பு", backToHome: "முகப்பிற்கு திரும்பு", title: "நம்ம உழவன் ஸ்மார்ட் போர்டல்",
+                otpSent: "OTP அனுப்பப்பட்டது", demo: "டெமோ: AGT001 / agent123"
+            },
+            hi: {
+                farmer: "किसान", agent: "एजेंट", loginFarmer: "किसान के रूप में लॉगिन", loginAgent: "एजेंट के रूप में लॉगिन",
+                registerFarmer: "किसान के रूप में पंजीकरण", phoneOrId: "फोन / किसान ID", phoneOrEmail: "फोन नंबर या ईमेल",
+                password: "पासवर्ड", agentId: "एजेंट ID", enterPhone: "फोन या ID दर्ज करें", enterPassword: "पासवर्ड दर्ज करें",
+                createAccount: "खाता बनाएं", fullName: "पूरा नाम", enterName: "पूरा नाम दर्ज करें", enterContact: "फोन या ईमेल दर्ज करें",
+                sendOTP: "OTP भेजें", verifyOTP: "OTP सत्यापित करें", enterOTP: "6 अंकों का OTP दर्ज करें", verify: "OTP सत्यापित करें",
+                notReceived: "नहीं मिला?", resendOTP: "OTP पुनः भेजें", setPassword: "पासवर्ड सेट करें", newPassword: "नया पासवर्ड",
+                confirmPassword: "पासवर्ड की पुष्टि करें", enterNewPassword: "नया पासवर्ड दर्ज करें", completeReg: "पंजीकरण पूरा करें",
+                backToLogin: "लॉगिन पर वापस", backToHome: "होम पर वापस", title: "नम्मा उजवन स्मार्ट पोर्टल",
+                otpSent: "OTP भेजा गया", demo: "डेमो: AGT001 / agent123"
+            },
+            te: {
+                farmer: "Farmer", agent: "Agent", loginFarmer: "Login as Farmer", loginAgent: "Login as Agent",
+                registerFarmer: "Register as Farmer", phoneOrId: "Phone / Farmer ID", phoneOrEmail: "Phone or Email",
+                password: "Password", agentId: "Agent ID", enterPhone: "Enter Phone or ID", enterPassword: "Enter Password",
+                createAccount: "Create Account", fullName: "Full Name", enterName: "Enter Full Name", enterContact: "Enter Phone or Email",
+                sendOTP: "Send OTP", verifyOTP: "Verify OTP", enterOTP: "Enter 6-digit OTP", verify: "Verify",
+                notReceived: "Didn't receive?", resendOTP: "Resend OTP", setPassword: "Set Password", newPassword: "New Password",
+                confirmPassword: "Confirm Password", enterNewPassword: "Enter New Password", completeReg: "Complete Registration",
+                backToLogin: "Back to Login", backToHome: "Back to Home", title: "Smart Farmers Portal",
+                otpSent: "OTP sent to", demo: "Demo: AGT001 / agent123"
+            },
+            kn: {
+                farmer: "ರೈತ", agent: "ಏಜೆಂಟ್", loginFarmer: "ರೈತನಾಗಿ ಲಾಗಿನ್", loginAgent: "ಏಜೆಂಟನಾಗಿ ಲಾಗಿನ್",
+                registerFarmer: "ರೈತನಾಗಿ ನೋಂದಾಯಿಸಿ", phoneOrId: "ಫೋನ್ / ರೈತ ID", phoneOrEmail: "ಫೋನ್ ಅಥವಾ ಇಮೇಲ್",
+                password: "ಪಾಸ್‌ವರ್ಡ್", agentId: "ಏಜೆಂಟ್ ID", enterPhone: "ಫೋನ್ ಅಥವಾ ID ನಮೂಸಿ", enterPassword: "ಪಾಸ್‌ವರ್ಡ್ ನಮೂಸಿ",
+                createAccount: "ಖಾತೆ ರಚಿಸಿ", fullName: "ಪೂರ್ಣ ಹೆಸರು", enterName: "ಪೂರ್ಣ ಹೆಸರನ್ನು ನಮೂಸಿ", enterContact: "ಫೋನ್ ಅಥವಾ ಇಮೇಲ್ ನಮೂಸಿ",
+                sendOTP: "OTP ಕಳುಹಿಸು", verifyOTP: "OTP ಪರಿಶೀಲಿಸು", enterOTP: "6 ಅಂಕಗಳ OTP ನಮೂಸಿ", verify: "ಪರಿಶೀಲಿಸು",
+                notReceived: "ಪಡೆಯಲಿಲ್ಲ?", resendOTP: "OTP ಮರುಕಳುಹಿಸು", setPassword: "ಪಾಸ್‌ವರ್ಡ್ ಹೊಂದಿಸು", newPassword: "ಹೊಸ ಪಾಸ್‌ವರ್ಡ್",
+                confirmPassword: "ಪಾಸ್‌ವರ್ಡ್ ದೃಢೀಕರಿಸು", enterNewPassword: "ಹೊಸ ಪಾಸ್‌ವರ್ಡ್ ನಮೂಸಿ", completeReg: "ನೋಂದಾವಣೆ ಪೂರ್ಣಗೊಳಿಸು",
+                backToLogin: "ಲಾಗಿನಿಗೆ ಹಿಂತಿರುಗು", backToHome: "ಮುಖಕ್ಕೆ ಹಿಂತಿರುಗು", title: "ನಮ್ಮ ಉಜವಂ ಸ್ಮಾರ್ಟ್ ಪೋರ್ಟಲ್",
+                otpSent: "OTP ಕಳುಹಿಸಲಾಯಿತು", demo: "ಡೆಮೋ: AGT001 / agent123"
+            },
+            ml: {
+                farmer: "കര്‍ഷകന്‍", agent: "ഏജന്റ്", loginFarmer: "കര്‍ഷകനായി ലോഗിന്‍", loginAgent: "ഏജന്റായി ലോഗിന്‍",
+                registerFarmer: "കര്‍ഷകനായി രജിസ്റ്റര്‍", phoneOrId: "ഫോണ്‍ / കര്‍ഷകന്‍ ID", phoneOrEmail: "ഫോണ്‍ അല്ലെങ്കില്‍ ഇമെയില്‍",
+                password: "പാസ്‌വേര്‍ഡ്", agentId: "ഏജന്റ് ID", enterPhone: "ഫോണ്‍ അല്ലെങ്കില്‍ ID നല്കുക", enterPassword: "പാസ്‌വേര്‍ഡ് നല്കുക",
+                createAccount: "അക്കൗണ്ട് സൃഷ്ടിക്കുക", fullName: "മുഴുവന്‍ പേര്", enterName: "മുഴുവന്‍ പേര് നല്കുക", enterContact: "ഫോണ്‍ അല്ലെങ്കില്‍ ഇമെയില്‍ നല്കുക",
+                sendOTP: "OTP അയയ്ക്കുക", verifyOTP: "OTP പരിശോധിക്കുക", enterOTP: "6 അക്കങ്ങളുള്ള OTP നല്കുക", verify: "പരിശോധിക്കുക",
+                notReceived: "ലഭിച്ചില്ല?", resendOTP: "OTP വീണ്ടും അയയ്ക്കുക", setPassword: "പാസ്‌വേര്‍ഡ് സെറ്റ് ചെയ്യുക", newPassword: "പുതിയ പാസ്‌വേര്‍ഡ്",
+                confirmPassword: "പാസ്‌വേര്‍ഡ് സ്ഥിരീകരിക്കുക", enterNewPassword: "പുതിയ പാസ്‌വേര്‍ഡ് നല്കുക", completeReg: "രജിസ്റ്ററേഷന്‍ പൂര്‍ത്തിയാക്കുക",
+                backToLogin: "ലോഗിനിലേക്ക് തിരികുക", backToHome: "ഹോമിലേക്ക് തിരികുക", title: "നമ്മ ഉഴവന്‍ സ്മാര്‍ട്ട് പോര്‍ട്ടല്‍",
+                otpSent: "OTP അയച്ചു", demo: "ഡെമോ: AGT001 / agent123"
+            }
+        };
+
+        let registrationData = {};
+        let currentStep = 1;
+
+        // Initialize
+        window.onload = function() {
+            const savedLang = localStorage.getItem('nammaUzhavanLang') || 'en';
+            document.getElementById('langSelect').value = savedLang;
+            applyLoginLang(savedLang);
+        };
+
+        function changeLang(lang) {
+            localStorage.setItem('nammaUzhavanLang', lang);
+            localStorage.setItem('smartFarmersLang', lang);
+            localStorage.setItem('selectedLanguage', lang);
+            applyLoginLang(lang);
+        }
+
+        function applyLoginLang(lang) {
+            const t = loginLang[lang] || loginLang.en;
+            
+            // Update elements with data-lang attribute
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                const key = el.getAttribute('data-lang');
+                if (t[key]) el.textContent = t[key];
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-placeholder');
+                if (t[key]) el.placeholder = t[key];
+            });
+            
+            // Update page title
+            document.getElementById('pageTitle').textContent = t.title;
+        }
+
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        // Show registration modal
+        function showRegisterModal() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('registerSection').style.display = 'block';
+            currentStep = 1;
+            updateStepIndicator();
+        }
+
+        // Show login section
+        function showLoginSection() {
+            document.getElementById('registerSection').style.display = 'none';
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('registerForm1').reset();
+            document.getElementById('registerForm2').reset();
+            document.getElementById('registerForm3').reset();
+        }
+
+        // Update step indicator
+        function updateStepIndicator() {
+            for (let i = 1; i <= 3; i++) {
+                const step = document.getElementById('step' + i);
+                const line = document.getElementById('line' + i);
+                if (i < currentStep) {
+                    step.className = 'step completed';
+                    if (line) line.className = 'step-line active';
+                } else if (i === currentStep) {
+                    step.className = 'step active';
+                    if (line) line.className = 'step-line';
+                } else {
+                    step.className = 'step';
+                    if (line) line.className = 'step-line';
+                }
+            }
+        }
+
+        // Step 1: Send OTP
+        document.getElementById('registerForm1').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const contact = document.getElementById('regContact').value;
+            
+            if (!name || !contact) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            registrationData.name = name;
+            registrationData.contact = contact;
+
+            // Simulate sending OTP
+            document.getElementById('otpSentTo').textContent = (loginLang[document.getElementById('langSelect').value] || loginLang.en).otpSent + ' ' + contact;
+            
+            document.getElementById('step1Content').style.display = 'none';
+            document.getElementById('step2Content').style.display = 'block';
+            currentStep = 2;
+            updateStepIndicator();
+
+            // Auto-fill demo OTP
+            document.getElementById('regOTP').value = '123456';
+        });
+
+        // Step 2: Verify OTP
+        document.getElementById('registerForm2').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const otp = document.getElementById('regOTP').value;
+            
+            if (otp === '123456') {
+                document.getElementById('step2Content').style.display = 'none';
+                document.getElementById('step3Content').style.display = 'block';
+                currentStep = 3;
+                updateStepIndicator();
+            } else {
+                alert('Invalid OTP. Use 123456 for demo.');
+            }
+        });
+
+        // Resend OTP
+        function resendOTP() {
+            alert('New OTP sent: 123456');
+            document.getElementById('regOTP').value = '123456';
+        }
+
+        // Step 3: Complete Registration
+        document.getElementById('registerForm3').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters');
+                return;
+            }
+
+            registrationData.password = password;
+            registrationData.farmerId = 'FRM' + Date.now().toString().slice(-6);
+
+            // Save to localStorage (demo)
+            const farmers = JSON.parse(localStorage.getItem('registeredFarmers') || '[]');
+            farmers.push(registrationData);
+            localStorage.setItem('registeredFarmers', JSON.stringify(farmers));
+            localStorage.setItem('farmerId', registrationData.farmerId);
+
+            alert('Registration successful! Your Farmer ID: ' + registrationData.farmerId);
+            window.location.href = 'smart-dashboard.html';
+        });
+
+        // Login handlers
+        function farmerLogin() {
+            const id = document.getElementById('farmerId').value;
+            const pass = document.getElementById('farmerPassword').value;
+            
+            if (!id || !pass) {
+                alert('Please enter Phone/ID and Password');
+                return;
+            }
+            
+            const farmers = JSON.parse(localStorage.getItem('registeredFarmers') || '[]');
+            const farmer = farmers.find(f => (f.contact === id || f.farmerId === id) && f.password === pass);
+            
+            if (farmer) {
+                localStorage.setItem('farmerId', farmer.farmerId);
+                window.location.href = 'smart-dashboard.html';
+            } else {
+                localStorage.setItem('farmerId', id);
+                window.location.href = 'smart-dashboard.html';
+            }
+        }
+
+        function agentLogin() {
+            const id = document.getElementById('agentId').value;
+            const pass = document.getElementById('agentPassword').value;
+            if (id === 'AGT001' && pass === 'agent123') {
+                window.location.href = 'agent-dashboard-new.html';
+            } else {
+                alert('Invalid Agent ID or Password. Try: AGT001 / agent123');
+            }
+        }
+
+        // Also keep form handlers as backup
+        document.getElementById('farmerLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            farmerLogin();
+        });
+
+        document.getElementById('agentLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            agentLogin();
+        });
+    </script>
 </body>
 </html>

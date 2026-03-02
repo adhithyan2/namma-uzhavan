@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Details - Smart Farmers Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary-green: #1B5E20; --secondary-green: #2E7D32; --light-green: #4CAF50; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #f8f9fa; }
+        .header { background: linear-gradient(135deg, var(--primary-green), var(--light-green)); color: white; padding: 20px; }
+        .card { border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .detail-label { font-size: 12px; color: #888; text-transform: uppercase; }
+        .detail-value { font-size: 16px; color: #333; font-weight: 500; }
+        .risk-badge { padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .risk-low { background: #e8f5e9; color: #2e7d32; }
+        .risk-medium { background: #fff3e0; color: #f57c00; }
+        .risk-high { background: #ffebee; color: #c62828; }
+    </style>
+</head>
+<body>
+    <div class="header d-flex justify-content-between align-items-center">
+        <div>
+            <h4><i class="fas fa-user me-2"></i>Farmer Details</h4>
+            <p class="mb-0" id="farmerId">ID: Loading...</p>
+        </div>
+        <button class="btn btn-light" onclick="window.location.href='agent-dashboard-new.html'">
+            <i class="fas fa-arrow-left me-2"></i>Back
+        </button>
+    </div>
+
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="fas fa-user me-2"></i>Personal Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <div class="detail-label">Full Name</div>
+                                <div class="detail-value" id="farmerName">-</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-label">Age</div>
+                                <div class="detail-value" id="farmerAge">-</div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <div class="detail-label">Aadhaar Number</div>
+                                <div class="detail-value" id="aadhaarNo">-</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-label">Phone Number</div>
+                                <div class="detail-value" id="phoneNo">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Location</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <div class="detail-label">Village</div>
+                                <div class="detail-value" id="village">-</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-label">District</div>
+                                <div class="detail-value" id="district">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0"><i class="fas fa-tractor me-2"></i>Farm Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <div class="detail-label">Land Size</div>
+                                <div class="detail-value" id="landSize">-</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-label">Soil Type</div>
+                                <div class="detail-value" id="soilType">-</div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <div class="detail-label">Irrigation Type</div>
+                                <div class="detail-value" id="irrigationType">-</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-label">Current Crop</div>
+                                <div class="detail-value" id="currentCrop">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Risk Assessment</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <span class="risk-badge risk-low" id="riskBadge">Low Risk</span>
+                        </div>
+                        <div class="detail-label">Registration Date</div>
+                        <div class="detail-value" id="registeredDate">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadFarmerDetails() {
+            const params = new URLSearchParams(window.location.search);
+            const farmerId = params.get('id');
+            
+            if (!farmerId) {
+                alert('No farmer ID provided');
+                window.location.href = 'agent-dashboard-new.html';
+                return;
+            }
+
+            document.getElementById('farmerId').textContent = 'ID: ' + farmerId;
+
+            try {
+                const res = await fetch('http://localhost:5000/api/farmers/' + farmerId);
+                const farmer = await res.json();
+
+                if (!farmer || farmer.error) {
+                    alert('Farmer not found');
+                    window.location.href = 'agent-dashboard-new.html';
+                    return;
+                }
+
+                document.getElementById('farmerName').textContent = farmer.farmerName || '-';
+                document.getElementById('farmerAge').textContent = farmer.age || '-';
+                document.getElementById('aadhaarNo').textContent = farmer.aadhaarNo || '-';
+                document.getElementById('phoneNo').textContent = farmer.phoneNo || '-';
+                document.getElementById('village').textContent = farmer.village || '-';
+                document.getElementById('district').textContent = farmer.district || '-';
+                document.getElementById('landSize').textContent = (farmer.landSize || '-') + ' Acres';
+                document.getElementById('soilType').textContent = farmer.soilType || '-';
+                document.getElementById('irrigationType').textContent = farmer.irrigationType || '-';
+                document.getElementById('currentCrop').textContent = farmer.currentCrop || '-';
+                
+                const riskLevel = farmer.riskLevel || 'Low';
+                const badge = document.getElementById('riskBadge');
+                badge.textContent = riskLevel + ' Risk';
+                badge.className = 'risk-badge risk-' + riskLevel.toLowerCase();
+
+                if (farmer.registeredDate) {
+                    const date = new Date(farmer.registeredDate);
+                    document.getElementById('registeredDate').textContent = date.toLocaleDateString();
+                }
+
+            } catch (e) {
+                alert('Error loading farmer details');
+                window.location.href = 'agent-dashboard-new.html';
+            }
+        }
+
+        loadFarmerDetails();
+    </script>
+</body>
+</html>

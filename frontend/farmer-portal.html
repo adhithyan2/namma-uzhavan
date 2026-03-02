@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmers Helping Portal - Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-green: #1b5e20;
+            --light-green: #4caf50;
+            --accent-green: #81c784;
+            --bg-light: #f5f9f5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-light);
+            min-height: 100vh;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            background: var(--primary-green);
+            padding: 0.5rem 0;
+        }
+
+        .nav-link {
+            color: white !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+
+        /* Notification Banner */
+        .notification-banner {
+            background: linear-gradient(90deg, #ff9800, #f57c00);
+            color: white;
+            padding: 0.75rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .main-container {
+            display: flex;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* Left Panel */
+        .info-panel {
+            background: linear-gradient(135deg, var(--primary-green) 0%, #2e7d32 100%);
+            color: white;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .info-panel h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .info-panel .description {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+
+        .service-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .service-list li {
+            padding: 0.6rem 0;
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        .service-list li i {
+            width: 30px;
+            color: var(--accent-green);
+        }
+
+        .agri-illustration {
+            margin-top: 2rem;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .agri-illustration i {
+            font-size: 4rem;
+            color: var(--accent-green);
+        }
+
+        /* Right Panel - Login */
+        .login-panel {
+            background: white;
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            background: white;
+        }
+
+        .login-card h2 {
+            color: var(--primary-green);
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.3rem;
+        }
+
+        .input-group-text {
+            background: var(--bg-light);
+            border-color: #ddd;
+            color: var(--primary-green);
+        }
+
+        .form-control:focus {
+            border-color: var(--light-green);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+        }
+
+        .captcha-box {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .captcha-text {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 5px;
+            color: var(--primary-green);
+            background: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            border: 1px dashed #ccc;
+        }
+
+        .btn-refresh {
+            background: none;
+            border: none;
+            color: var(--light-green);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            transition: transform 0.3s;
+        }
+
+        .btn-refresh:hover {
+            transform: rotate(180deg);
+        }
+
+        .btn-login {
+            background: var(--primary-green);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .btn-login:hover {
+            background: #144a17;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(27, 94, 32, 0.3);
+        }
+
+        .form-links {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .form-links a {
+            color: var(--light-green);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .form-links a:hover {
+            text-decoration: underline;
+        }
+
+        .register-box {
+            background: #e8f5e9;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .register-box p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .register-box a {
+            color: var(--primary-green);
+            font-weight: 600;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .info-panel {
+                padding: 2rem;
+            }
+
+            .login-panel {
+                padding: 2rem 1rem;
+            }
+
+            .nav-scroll {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .info-panel h1 {
+                font-size: 1.5rem;
+            }
+
+            .login-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand text-white fw-bold" href="#">
+                <i class="fas fa-leaf me-2"></i>Farmers Portal
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse nav-scroll" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-home me-1"></i>Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-info-circle me-1"></i>About Us</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-hand-holding-heart me-1"></i>Farmer Services</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-gift me-1"></i>Schemes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-question-circle me-1"></i>Help</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-envelope me-1"></i>Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-comments me-1"></i>Chat Support</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Notification Banner -->
+    <div class="notification-banner">
+        <i class="fas fa-bullhorn me-2"></i>
+        Please register as a new farmer to access online services and support.
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Left Panel - Information -->
+        <div class="col-lg-6 info-panel">
+            <h1><i class="fas fa-leaf me-2"></i>Farmers Helping Services Portal</h1>
+            
+            <p class="description">
+                Welcome to the Farmers Helping Services Portal. Our platform connects farmers with 
+                government schemes, expert crop guidance, weather alerts, and market price information. 
+                Farmers can register and apply for services online. All services are available 24/7 
+                to support our farming community.
+            </p>
+
+            <h5><i class="fas fa-list-ul me-2"></i>Available Services:</h5>
+            <ul class="service-list">
+                <li><i class="fas fa-seedling"></i> Crop Advisory Support</li>
+                <li><i class="fas fa-file-signature"></i> Subsidy Application</li>
+                <li><i class="fas fa-file-alt"></i> Soil Health Card</li>
+                <li><i class="fas fa-water"></i> Irrigation Assistance</li>
+                <li><i class="fas fa-shield-alt"></i> Crop Insurance Help</li>
+                <li><i class="fas fa-chart-line"></i> Market Price Updates</li>
+                <li><i class="fas fa-graduation-cap"></i> Farmer Training Programs</li>
+                <li><i class="fas fa-tools"></i> Equipment Rental Support</li>
+            </ul>
+
+            <div class="agri-illustration">
+                <i class="fas fa-tractor"></i>
+                <p class="mt-2">Empowering Farmers, Growing Together</p>
+            </div>
+        </div>
+
+        <!-- Right Panel - Login Form -->
+        <div class="col-lg-6 login-panel">
+            <div class="login-card">
+                <h2><i class="fas fa-sign-in-alt me-2"></i>Sign In</h2>
+                
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" class="form-control" id="username" required placeholder="Enter username">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" class="form-control" id="password" required placeholder="Enter password">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Enter Captcha</label>
+                        <div class="captcha-box">
+                            <span class="captcha-text" id="captchaText">X7K9M2</span>
+                            <button type="button" class="btn-refresh" onclick="refreshCaptcha()" title="Refresh Captcha">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        <input type="text" class="form-control" id="captchaInput" required placeholder="Enter captcha code" maxlength="6">
+                    </div>
+
+                    <button type="submit" class="btn btn-login">
+                        <span class="spinner-border spinner-border-sm d-none me-2" id="loginSpinner"></span>
+                        <span id="loginBtnText">Login</span>
+                    </button>
+
+                    <div class="form-links">
+                        <a href="#" onclick="showAlert('Password reset link sent to registered mobile/email')">Forgot Password?</a>
+                        <span class="mx-2">|</span>
+                        <a href="#" onclick="showAlert('Contact your nearest booth for username recovery')">Forgot Username?</a>
+                    </div>
+
+                    <div class="register-box">
+                        <p>New Farmer? <a href="profile-setup.html">Register here</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentCaptcha = '';
+
+        function generateCaptcha() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let result = '';
+            for (let i = 0; i < 6; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            currentCaptcha = result;
+            document.getElementById('captchaText').textContent = result;
+        }
+
+        function refreshCaptcha() {
+            generateCaptcha();
+            document.getElementById('captchaInput').value = '';
+        }
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const icon = passwordInput.nextElementSibling.querySelector('i');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const captchaInput = document.getElementById('captchaInput').value.toUpperCase();
+            const spinner = document.getElementById('loginSpinner');
+            const btnText = document.getElementById('loginBtnText');
+
+            if (captchaInput !== currentCaptcha) {
+                alert('Invalid captcha. Please try again.');
+                refreshCaptcha();
+                return;
+            }
+
+            spinner.classList.remove('d-none');
+            btnText.textContent = 'Logging in...';
+
+            setTimeout(() => {
+                if (username && password) {
+                    sessionStorage.setItem('farmerLoggedIn', 'true');
+                    sessionStorage.setItem('farmerUsername', username);
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert('Login failed. Please try again.');
+                }
+                spinner.classList.add('d-none');
+                btnText.textContent = 'Login';
+            }, 1500);
+        }
+
+        function showAlert(message) {
+            alert(message);
+        }
+
+        // Initialize captcha on page load
+        generateCaptcha();
+    </script>
+</body>
+</html>

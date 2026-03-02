@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmers List - Smart Farmers Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary-green: #1b5e20;
+            --secondary-green: #2e7d32;
+            --light-green: #4caf50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f9f5;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--primary-green) 0%, #0d3d12 100%);
+            color: white;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 4px 0;
+        }
+
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        .risk-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .risk-high { background: #ffebee; color: #c62828; }
+        .risk-medium { background: #fff3e0; color: #f57c00; }
+        .risk-low { background: #e8f5e9; color: #2e7d32; }
+
+        .search-box {
+            background: white;
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Sidebar -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="text-center py-4 border-bottom border-secondary">
+                    <i class="fas fa-leaf fa-2x mb-2"></i>
+                    <h6 class="fw-bold">Booth Agent</h6>
+                    <small>ID: AGT001</small>
+                </div>
+                <div class="p-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="booth-dashboard.html">
+                                <i class="fas fa-home"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="register-farmer.html">
+                                <i class="fas fa-user-plus"></i> Register Farmer
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="farmers-list.html">
+                                <i class="fas fa-users"></i> Farmers List
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="crop-monitoring.html">
+                                <i class="fas fa-chart-line"></i> Crop Monitoring
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="climate-alerts.html">
+                                <i class="fas fa-cloud-sun"></i> Climate Alerts
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="reports.html">
+                                <i class="fas fa-file-alt"></i> Reports
+                            </a>
+                        </li>
+                        <li class="nav-item mt-3">
+                            <a class="nav-link text-warning" href="index.html" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 p-4">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="fw-bold mb-1"><i class="fas fa-users me-2 text-success"></i>Farmers List</h4>
+                        <p class="text-muted mb-0">View and manage all registered farmers</p>
+                    </div>
+                    <button class="btn btn-success" onclick="window.location.href='register-farmer.html'">
+                        <i class="fas fa-plus me-1"></i>Add Farmer
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="search-box d-flex">
+                                    <input type="text" class="form-control border-0" placeholder="Search farmer..." id="searchInput" onkeyup="searchFarmer()">
+                                    <button class="btn btn-success"><i class="fas fa-search"></i></button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="cropFilter" onchange="filterFarmers()">
+                                    <option value="">Filter by Crop</option>
+                                    <option value="Paddy">Paddy</option>
+                                    <option value="Groundnut">Groundnut</option>
+                                    <option value="Cotton">Cotton</option>
+                                    <option value="Maize">Maize</option>
+                                    <option value="Sugarcane">Sugarcane</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="riskFilter" onchange="filterFarmers()">
+                                    <option value="">Filter by Risk</option>
+                                    <option value="High">High Risk</option>
+                                    <option value="Medium">Medium Risk</option>
+                                    <option value="Low">Low Risk</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                                    <i class="fas fa-redo me-1"></i>Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Farmers Table -->
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="farmersTable">
+                                <thead class="table-success">
+                                    <tr>
+                                        <th>Farmer ID</th>
+                                        <th>Name</th>
+                                        <th>Age</th>
+                                        <th>Village</th>
+                                        <th>Land (Acres)</th>
+                                        <th>Crop</th>
+                                        <th>Soil Type</th>
+                                        <th>Risk Level</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="farmersList">
+                                    <tr>
+                                        <td>FRM-2024-001</td>
+                                        <td>Ramesh Kumar</td>
+                                        <td>45</td>
+                                        <td>Kallur</td>
+                                        <td>5.0</td>
+                                        <td>Paddy</td>
+                                        <td>Loamy</td>
+                                        <td><span class="risk-badge risk-low">Low</span></td>
+                                        <td><button class="btn btn-sm btn-success" onclick="viewFarmer('FRM-2024-001')">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>FRM-2024-002</td>
+                                        <td>Lakshman Rao</td>
+                                        <td>52</td>
+                                        <td>Chittoor</td>
+                                        <td>3.5</td>
+                                        <td>Groundnut</td>
+                                        <td>Red Soil</td>
+                                        <td><span class="risk-badge risk-high">High</span></td>
+                                        <td><button class="btn btn-sm btn-success" onclick="viewFarmer('FRM-2024-002')">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>FRM-2024-003</td>
+                                        <td>Venkat Reddy</td>
+                                        <td>38</td>
+                                        <td>Tirupati</td>
+                                        <td>8.0</td>
+                                        <td>Cotton</td>
+                                        <td>Black Soil</td>
+                                        <td><span class="risk-badge risk-medium">Medium</span></td>
+                                        <td><button class="btn btn-sm btn-success" onclick="viewFarmer('FRM-2024-003')">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>FRM-2024-004</td>
+                                        <td>Obula Reddy</td>
+                                        <td>55</td>
+                                        <td>Kallur</td>
+                                        <td>4.0</td>
+                                        <td>Maize</td>
+                                        <td>Loamy</td>
+                                        <td><span class="risk-badge risk-low">Low</span></td>
+                                        <td><button class="btn btn-sm btn-success" onclick="viewFarmer('FRM-2024-004')">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>FRM-2024-005</td>
+                                        <td>Krishna Murthy</td>
+                                        <td>42</td>
+                                        <td>Pileru</td>
+                                        <td>6.5</td>
+                                        <td>Paddy</td>
+                                        <td>Clay</td>
+                                        <td><span class="risk-badge risk-high">High</span></td>
+                                        <td><button class="btn btn-sm btn-success" onclick="viewFarmer('FRM-2024-005')">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>FRM-2024-006</td>
+                                        <td>Ramanaidu</td>
+                                        <td>48</td>
+                                        <td>Madanapalle</td>
+                                        <td>2.0</td>
+                                        <td>Groundnut</td>
+                                        <td>Sandy</td>
+                                        <td><span class="risk-badge risk-low">Low</span></td>
+                                        <td><button class="btn btn-sm btn-success" onclick="viewFarmer('FRM-2024-006')">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>FRM-2024-007</td>
+                                        <td>Srinivas</td>
+                                        <td>35</td>
+                                        <td>Chittoor</td>
+                                        <td>10.0</td>
+                                        <td>Sugarcane</td>
+                                        <td>Clay</td>
+                                        <td><span class="risk-badge risk-medium">Medium</span></td>
+                                        <td><button class="btn btn-sm btn-success" onclick="viewFarmer('FRM-2024-007')">View</button></td>
+                                    </tr>
+                                    <tr>
+                                        <td>FRM-2024-008</td>
+                                        <td>Papanaidu</td>
+                                        <td>60</td>
+                                        <td>Kallur</td>
+                                        <td>7.0</td>
+                                        <td>Wheat</td>
+                                        <td>Loamy</td>
+                                        <td><span class="risk-badge risk-low">Low</span></td>
+                                        <td><button class="btn btn-sm btn-success" onclick="viewFarmer('FRM-2024-008')">View</button></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <small class="text-muted">Showing 1-8 of 248 farmers</small>
+                    <nav>
+                        <ul class="pagination mb-0">
+                            <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                            <li class="page-item active"><a class="page-link bg-success" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Farmer Detail Modal -->
+    <div class="modal fade" id="farmerModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-user me-2"></i>Farmer Profile</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="farmerModalContent">
+                    <!-- Dynamic content -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success" onclick="editFarmer()">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let farmers = [];
+
+        // Fetch farmers from backend
+        async function loadFarmers() {
+            try {
+                const response = await fetch('http://localhost:5000/api/farmers');
+                farmers = await response.json();
+                
+                // Also check localStorage for backup
+                const localFarmers = JSON.parse(localStorage.getItem('farmers') || '[]');
+                if (localFarmers.length > 0 && farmers.length === 0) {
+                    farmers = localFarmers;
+                }
+            } catch (error) {
+                console.log('Using local farmers data');
+                farmers = JSON.parse(localStorage.getItem('farmers') || '[]');
+            }
+            
+            renderTable(farmers);
+            document.getElementById('farmerCount').textContent = farmers.length;
+        }
+
+        function searchFarmer() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            filterFarmers();
+        }
+
+        function filterFarmers() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const cropFilter = document.getElementById('cropFilter').value;
+            const riskFilter = document.getElementById('riskFilter').value;
+
+            const filtered = farmers.filter(f => {
+                const matchSearch = (f.farmerName || f.name || '').toLowerCase().includes(search) || (f.id || '').toLowerCase().includes(search);
+                const matchCrop = !cropFilter || (f.currentCrop || f.crop) === cropFilter;
+                const matchRisk = !riskFilter || (f.riskLevel || f.risk) === riskFilter;
+                return matchSearch && matchCrop && matchRisk;
+            });
+
+            renderTable(filtered);
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('farmersList');
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No farmers found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(f => `
+                <tr>
+                    <td>${f.id || 'N/A'}</td>
+                    <td>${f.farmerName || f.name || 'N/A'}</td>
+                    <td>${f.age || 'N/A'}</td>
+                    <td>${f.village || 'N/A'}</td>
+                    <td>${f.landSize || f.land || 'N/A'}</td>
+                    <td>${f.currentCrop || f.crop || 'N/A'}</td>
+                    <td>${f.soilType || f.soil || 'N/A'}</td>
+                    <td><span class="risk-badge risk-${(f.riskLevel || f.risk || 'Low').toLowerCase()}">${f.riskLevel || f.risk || 'Low'}</span></td>
+                    <td><button class="btn btn-sm btn-success" onclick="viewFarmer('${f.id}')">View</button></td>
+                </tr>
+            `).join('');
+        }
+                    <td>${f.age}</td>
+                    <td>${f.village}</td>
+                    <td>${f.land}</td>
+                    <td>${f.crop}</td>
+                    <td>${f.soil}</td>
+                    <td><span class="risk-badge risk-${f.risk.toLowerCase()}">${f.risk}</span></td>
+                    <td><button class="btn btn-sm btn-success" onclick="viewFarmer('${f.id}')">View</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('cropFilter').value = '';
+            document.getElementById('riskFilter').value = '';
+            renderTable(farmers);
+        }
+
+        function viewFarmer(id) {
+            const farmer = farmers.find(f => f.id === id);
+            if (!farmer) {
+                alert('Farmer not found');
+                return;
+            }
+            const content = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Farmer ID:</strong> ${farmer.id}</p>
+                        <p><strong>Name:</strong> ${farmer.farmerName || farmer.name}</p>
+                        <p><strong>Age:</strong> ${farmer.age} years</p>
+                        <p><strong>Phone:</strong> ${farmer.phoneNo || farmer.phone}</p>
+                        <p><strong>Aadhaar:</strong> ${farmer.aadhaarNo || farmer.aadhaar}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Village:</strong> ${farmer.village}</p>
+                        <p><strong>Land Size:</strong> ${farmer.landSize || farmer.land} acres</p>
+                        <p><strong>Current Crop:</strong> ${farmer.currentCrop || farmer.crop}</p>
+                        <p><strong>Soil Type:</strong> ${farmer.soilType || farmer.soil}</p>
+                        <p><strong>Risk Level:</strong> <span class="risk-badge risk-${(farmer.riskLevel || farmer.risk || 'Low').toLowerCase()}">${farmer.riskLevel || farmer.risk || 'Low'}</span></p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('farmerModalContent').innerHTML = content;
+            new bootstrap.Modal(document.getElementById('farmerModal')).show();
+        }
+
+        function editFarmer() {
+            alert('Edit farmer functionality');
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        // Initialize
+        loadFarmers();
+    </script>
+                    <div class="col-md-6">
+                        <p><strong>Village:</strong> ${farmer.village}</p>
+                        <p><strong>Land Size:</strong> ${farmer.land} acres</p>
+                        <p><strong>Current Crop:</strong> ${farmer.crop}</p>
+                        <p><strong>Soil Type:</strong> ${farmer.soil}</p>
+                        <p><strong>Risk Level:</strong> <span class="risk-badge risk-${farmer.risk.toLowerCase()}">${farmer.risk}</span></p>
+                    </div>
+                </div>
+            `;
+            document.getElementById('farmerModalContent').innerHTML = content;
+            new bootstrap.Modal(document.getElementById('farmerModal')).show();
+        }
+
+        function editFarmer() {
+            alert('Edit farmer functionality');
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

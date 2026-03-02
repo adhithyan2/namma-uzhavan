@@ -5,11 +5,44 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const fs = require('fs');
 
 const User = require('./models/User');
 const FarmerProfile = require('./models/FarmerProfile');
 const Product = require('./models/Product');
 const Dealer = require('./models/Dealer');
+const Farmer = require('./models/Farmer');
+
+let farmers = [];
+
+// Load Kaggle Crop Dataset
+let cropDataset = [];
+try {
+    const csvData = fs.readFileSync(path.join(__dirname, 'data/Crop_recommendation.csv'), 'utf8');
+    const lines = csvData.split('\n').slice(1); // Skip header
+    lines.forEach(line => {
+        const parts = line.split(',');
+        if (parts.length >= 8) {
+            cropDataset.push({
+                N: parseFloat(parts[0]),
+                P: parseFloat(parts[1]),
+                K: parseFloat(parts[2]),
+                temperature: parseFloat(parts[3]),
+                humidity: parseFloat(parts[4]),
+                ph: parseFloat(parts[5]),
+                rainfall: parseFloat(parts[6]),
+                label: parts[7].trim()
+            });
+        }
+    });
+    console.log(`Loaded ${cropDataset.length} crop records from Kaggle dataset`);
+} catch (err) {
+    console.log('Could not load Kaggle dataset:', err.message);
+}
+
+// Get unique crops from dataset
+const kaggleCrops = [...new Set(cropDataset.map(d => d.label))];
+console.log('Crops in dataset:', kaggleCrops.join(', '));
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -468,6 +501,211 @@ app.get('/api/forecast', async (req, res) => {
   }
 });
 
+// ==================== KAGGLE DATASET BASED RECOMMENDATIONS ====================
+
+function getKaggleBasedRecommendations(temperature, humidity, soilType) {
+    if (cropDataset.length === 0) return [];
+    
+    // Convert humidity to approximate rainfall (mm)
+    const rainfall = humidity * 4; // Approximate conversion
+    
+    const cropScores = {};
+    
+    // Calculate scores for each crop based on Kaggle data
+    kaggleCrops.forEach(cropName => {
+        const cropData = cropDataset.filter(d => d.label === cropName);
+        if (cropData.length === 0) return;
+        
+        // Get average values for this crop from dataset
+        const avgTemp = cropData.reduce((sum, d) => sum + d.temperature, 0) / cropData.length;
+        const avgHumidity = cropData.reduce((sum, d) => sum + d.humidity, 0) / cropData.length;
+        const avgRainfall = cropData.reduce((sum, d) => sum + d.rainfall, 0) / cropData.length;
+        const avgPh = cropData.reduce((sum, d) => sum + d.ph, 0) / cropData.length;
+        const avgN = cropData.reduce((sum, d) => sum + d.N, 0) / cropData.length;
+        const avgP = cropData.reduce((sum, d) => sum + d.P, 0) / cropData.length;
+        const avgK = cropData.reduce((sum, d) => sum + d.K, 0) / cropData.length;
+        
+        // Calculate similarity score (lower is better)
+        const tempDiff = Math.abs(temperature - avgTemp);
+        const humidityDiff = Math.abs(humidity - avgHumidity);
+        const rainDiff = Math.abs(rainfall - avgRainfall);
+        
+        // Score calculation (0-100)
+        const tempScore = Math.max(0, 100 - tempDiff * 10);
+        const humidityScore = Math.max(0, 100 - humidityDiff * 2);
+        const rainScore = Math.max(0, 100 - rainDiff * 0.5);
+        
+        const finalScore = (tempScore * 0.4 + humidityScore * 0.3 + rainScore * 0.3);
+        
+        cropScores[cropName] = {
+            score: Math.round(finalScore),
+            avgTemp: avgTemp.toFixed(1),
+            avgRainfall: avgRainfall.toFixed(1),
+            sampleCount: cropData.length,
+            data: cropData
+        };
+    });
+    
+    // Sort by score and return top 5
+    const sortedCrops = Object.entries(cropScores)
+        .sort((a, b) => b[1].score - a[1].score)
+        .slice(0, 5);
+    
+    return sortedCrops.map(([cropName, data]) => {
+        const riskPercentage = Math.max(0, 100 - data.score);
+        return {
+            crop: cropName.charAt(0).toUpperCase() + cropName.slice(1),
+            reason: `Based on Kaggle dataset analysis (${data.sampleCount} samples). Optimal temp: ${data.avgTemp}°C, Rainfall: ${data.avgRainfall}mm`,
+            score: data.score,
+            riskPercentage: riskPercentage,
+            waterNeed: data.score > 70 ? 'Low' : data.score > 50 ? 'Medium' : 'High',
+            moneySavingTip: getMoneySavingTipFromScore(data.score, cropName),
+            profitPotential: calculateProfitFromKaggle(cropName, data.score),
+            source: 'Kaggle Dataset'
+        };
+    });
+}
+
+function getMoneySavingTipFromScore(score, cropName) {
+    const tips = [];
+    if (score > 70) {
+        tips.push('Crop well-suited to current conditions - high yield expected');
+        tips.push('Follow standard farming practices for best results');
+    } else if (score > 50) {
+        tips.push('Monitor crop closely for stress signs');
+        tips.push('Consider soil amendments to improve conditions');
+    } else {
+        tips.push('Consider alternative crops better suited to conditions');
+        tips.push('May require additional irrigation/fertilizers');
+    }
+    return tips;
+}
+
+function calculateProfitFromKaggle(cropName, score) {
+    const baseProfit = {
+        'rice': 35000, 'maize': 28000, 'jute': 32000, 'cotton': 45000,
+        'coconut': 40000, 'papaya': 30000, 'orange': 35000, 'apple': 60000,
+        'muskmelon': 25000, 'watermelon': 25000, 'mango': 50000, 'banana': 35000,
+        'pomegranate': 45000, 'lentil': 20000, 'blackgram': 18000, 'mungbean': 18000,
+        'mothbeans': 18000, 'pigeonpeas': 22000, 'kidneybeans': 25000, 'chickpeas': 22000,
+        'coffee': 55000
+    };
+    
+    const base = baseProfit[cropName.toLowerCase()] || 25000;
+    const adjustedProfit = base * (score / 100);
+    
+    return {
+        estimatedProfit: Math.round(adjustedProfit),
+        confidenceLevel: score > 70 ? 'High' : score > 50 ? 'Medium' : 'Low',
+        perAcre: `₹${Math.round(adjustedProfit).toLocaleString()}`
+    };
+}
+
+// GET /api/kaggle-crops - List crops from Kaggle dataset
+app.get('/api/kaggle-crops', (req, res) => {
+    res.json({
+        totalRecords: cropDataset.length,
+        crops: kaggleCrops,
+        message: cropDataset.length > 0 ? 'Kaggle dataset loaded successfully' : 'Kaggle dataset not loaded'
+    });
+});
+
+// GET /api/exact-risk - Calculate exact risk based on GPS location and real-time weather
+app.get('/api/exact-risk', async (req, res) => {
+  try {
+    const { lat, lon, village, temperature, humidity } = req.query;
+    
+    let weather;
+    if (lat && lon) {
+      const wRes = await axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=Metric`);
+      weather = wRes.data;
+    } else if (village) {
+      const wRes = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${village},IN&appid=${WEATHER_API_KEY}&units=Metric`);
+      weather = wRes.data;
+    } else {
+      return res.status(400).json({ error: 'Provide lat/lon or village' });
+    }
+    
+    const temp = weather.main.temp;
+    const hum = weather.main.humidity;
+    const wind = weather.wind.speed;
+    const condition = weather.weather[0].main;
+    const description = weather.weather[0].description;
+    
+    // Exact Risk Calculation
+    let riskScore = 0;
+    let risks = [];
+    let recommendations = [];
+    
+    // Temperature risks
+    if (temp > 40) {
+      riskScore += 40;
+      risks.push({ type: 'Extreme Heat', severity: 'High', value: temp + '°C' });
+      recommendations.push('Avoid outdoor work during 12PM-4PM');
+    } else if (temp > 35) {
+      riskScore += 25;
+      risks.push({ type: 'High Temperature', severity: 'Medium', value: temp + '°C' });
+    } else if (temp < 10) {
+      riskScore += 30;
+      risks.push({ type: 'Cold Wave', severity: 'Medium', value: temp + '°C' });
+    }
+    
+    // Humidity risks
+    if (hum < 30) {
+      riskScore += 25;
+      risks.push({ type: 'Drought Risk', severity: 'High', value: hum + '%' });
+      recommendations.push('Use drip irrigation immediately');
+    } else if (hum > 85) {
+      riskScore += 20;
+      risks.push({ type: 'High Humidity', severity: 'Medium', value: hum + '%' });
+      recommendations.push('Watch for fungal diseases');
+    }
+    
+    // Weather condition risks
+    if (condition === 'Thunderstorm') {
+      riskScore += 35;
+      risks.push({ type: 'Storm Alert', severity: 'High', value: condition });
+      recommendations.push('Secure crops and avoid field work');
+    } else if (condition === 'Rain') {
+      risks.push({ type: 'Rainfall', severity: 'Low', value: description });
+      recommendations.push('Good for irrigation');
+    }
+    
+    // Wind risks
+    if (wind > 10) {
+      riskScore += 15;
+      risks.push({ type: 'High Wind', severity: 'Medium', value: wind + ' m/s' });
+    }
+    
+    // Calculate final risk level
+    let riskLevel = 'Low';
+    if (riskScore >= 50) riskLevel = 'High';
+    else if (riskScore >= 25) riskLevel = 'Medium';
+    
+    // Get crop suggestions for this exact location
+    const cropRes = await axios.get(`http://localhost:${PORT}/api/crop-suggestion?temperature=${temp}&rainfall=${hum}&soilType=Loamy&location=${weather.name}`);
+    const crops = cropRes.data;
+    
+    res.json({
+      location: weather.name,
+      coordinates: { lat: weather.coord.lat, lon: weather.coord.lon },
+      temperature: temp,
+      humidity: hum,
+      windSpeed: wind,
+      condition: condition,
+      description: description,
+      riskScore: riskScore,
+      riskLevel: riskLevel,
+      risks: risks,
+      recommendations: recommendations,
+      topCrops: crops.suggestions?.slice(0, 3) || [],
+      fetchedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // GET /crop-suggestion
 app.get('/api/crop-suggestion', async (req, res) => {
   try {
@@ -478,8 +716,13 @@ app.get('/api/crop-suggestion', async (req, res) => {
     const soil = soilType || '';
     const loc = location || '';
 
-    // Get advanced crop scoring with location
-    const scoredCrops = calculateCropScore(temp, rain, soil, loc);
+    // Use Kaggle dataset for better recommendations if available
+    let scoredCrops;
+    if (cropDataset.length > 0) {
+        scoredCrops = getKaggleBasedRecommendations(temp, rain, soil);
+    } else {
+        scoredCrops = calculateCropScore(temp, rain, soil, loc);
+    }
 
     const translations = {
       en: {
@@ -714,6 +957,370 @@ function getCropDetails(cropName, lang) {
 
   return cropDatabase[cropName]?.[lang] || cropDatabase[cropName]?.en || { season: 'N/A', water: 'N/A', yield: 'N/A', price: 'N/A', soil: 'N/A' };
 }
+
+// ==================== FARMER MANAGEMENT ====================
+
+// POST /api/register-farmer (Booth Agent)
+app.post('/api/register-farmer', async (req, res) => {
+  try {
+    const { farmerName, age, aadhaarNo, phoneNo, village, district, landSize, soilType, irrigationType, currentCrop, season, photo } = req.body;
+    
+    const year = new Date().getFullYear();
+    const random = Math.floor(100 + Math.random() * 900);
+    const farmerId = `FRM-${year}-${random}`;
+    
+    // Save to MongoDB
+    const newFarmer = new Farmer({
+      farmerName,
+      age,
+      aadhaarNo,
+      phoneNo,
+      village,
+      district,
+      landSize,
+      soilType,
+      irrigationType,
+      currentCrop,
+      season,
+      photo,
+      registeredDate: new Date(),
+      riskLevel: 'Low'
+    });
+    
+    await newFarmer.save();
+    
+    const savedFarmer = {
+      id: farmerId,
+      farmerName: newFarmer.farmerName,
+      age: newFarmer.age,
+      aadhaarNo: newFarmer.aadhaarNo,
+      phoneNo: newFarmer.phoneNo,
+      village: newFarmer.village,
+      district: newFarmer.district,
+      landSize: newFarmer.landSize,
+      soilType: newFarmer.soilType,
+      irrigationType: newFarmer.irrigationType,
+      currentCrop: newFarmer.currentCrop,
+      riskLevel: newFarmer.riskLevel,
+      registeredDate: newFarmer.registeredDate
+    };
+    
+    // Also keep in memory for quick access
+    farmers.push(savedFarmer);
+    
+    res.status(201).json({ 
+      message: 'Farmer registered successfully', 
+      farmer: savedFarmer
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/farmers (Booth Agent - Get all farmers)
+app.get('/api/farmers', async (req, res) => {
+  try {
+    // Try MongoDB first
+    const dbFarmers = await Farmer.find().sort({ registeredDate: -1 });
+    if (dbFarmers.length > 0) {
+      const formattedFarmers = dbFarmers.map(f => ({
+        id: f.id || `FRM-${new Date(f.registeredDate).getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+        farmerName: f.farmerName,
+        age: f.age,
+        aadhaarNo: f.aadhaarNo,
+        phoneNo: f.phoneNo,
+        village: f.village,
+        district: f.district,
+        landSize: f.landSize,
+        soilType: f.soilType,
+        irrigationType: f.irrigationType,
+        currentCrop: f.currentCrop,
+        riskLevel: f.riskLevel,
+        registeredDate: f.registeredDate
+      }));
+      return res.json(formattedFarmers);
+    }
+    // Fallback to memory
+    res.json(farmers);
+  } catch (error) {
+    res.json(farmers);
+  }
+});
+
+// GET /api/farmers/:id
+app.get('/api/farmers/:id', async (req, res) => {
+  try {
+    // Try MongoDB first - search by id or _id
+    const dbFarmer = await Farmer.findOne({ $or: [{ id: req.params.id }, { _id: req.params.id }] });
+    if (dbFarmer) {
+      return res.json({
+        id: dbFarmer.id,
+        farmerName: dbFarmer.farmerName,
+        age: dbFarmer.age,
+        aadhaarNo: dbFarmer.aadhaarNo,
+        phoneNo: dbFarmer.phoneNo,
+        village: dbFarmer.village,
+        district: dbFarmer.district,
+        landSize: dbFarmer.landSize,
+        soilType: dbFarmer.soilType,
+        irrigationType: dbFarmer.irrigationType,
+        currentCrop: dbFarmer.currentCrop,
+        riskLevel: dbFarmer.riskLevel,
+        registeredDate: dbFarmer.registeredDate
+      });
+    }
+    // Fallback to memory
+    const farmer = farmers.find(f => f.id === req.params.id);
+    if (!farmer) {
+      return res.status(404).json({ error: 'Farmer not found' });
+    }
+    res.json(farmer);
+  } catch (error) {
+    const farmer = farmers.find(f => f.id === req.params.id);
+    if (!farmer) {
+      return res.status(404).json({ error: 'Farmer not found' });
+    }
+    res.json(farmer);
+  }
+});
+
+// PUT /api/farmers/:id
+app.put('/api/farmers/:id', async (req, res) => {
+  try {
+    const index = farmers.findIndex(f => f.id === req.params.id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Farmer not found' });
+    }
+    
+    farmers[index] = { ...farmers[index], ...req.body };
+    res.json({ message: 'Farmer updated successfully', farmer: farmers[index] });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/farmers/:id
+app.delete('/api/farmers/:id', async (req, res) => {
+  try {
+    const index = farmers.findIndex(f => f.id === req.params.id);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Farmer not found' });
+    }
+    
+    farmers.splice(index, 1);
+    res.json({ message: 'Farmer deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/villages
+app.get('/api/villages', async (req, res) => {
+  try {
+    const villages = [
+      { name: 'Kallur', district: 'Chittoor', state: 'Andhra Pradesh', lat: 13.3189, lon: 79.4243 },
+      { name: 'Chittoor', district: 'Chittoor', state: 'Andhra Pradesh', lat: 13.2170, lon: 79.1000 },
+      { name: 'Tirupati', district: 'Chittoor', state: 'Andhra Pradesh', lat: 13.6288, lon: 79.4192 },
+      { name: 'Pileru', district: 'Chittoor', state: 'Andhra Pradesh', lat: 13.4667, lon: 79.6667 },
+      { name: 'Madanapalle', district: 'Anantapur', state: 'Andhra Pradesh', lat: 13.9500, lon: 78.4833 },
+      { name: 'Anantapur', district: 'Anantapur', state: 'Andhra Pradesh', lat: 14.6819, lon: 77.6086 },
+      { name: 'Kadapa', district: 'Kadapa', state: 'Andhra Pradesh', lat: 14.4673, lon: 78.8242 },
+      { name: 'Nellore', district: 'Nellore', state: 'Andhra Pradesh', lat: 14.4426, lon: 79.9865 },
+      { name: 'Hyderabad', district: 'Hyderabad', state: 'Telangana', lat: 17.3850, lon: 78.4867 },
+      { name: 'Warangal', district: 'Warangal', state: 'Telangana', lat: 17.9784, lon: 79.5941 },
+      { name: 'Karimnagar', district: 'Karimnagar', state: 'Telangana', lat: 18.4386, lon: 79.1288 },
+      { name: 'Nizamabad', district: 'Nizamabad', state: 'Telangana', lat: 18.6725, lon: 78.0941 },
+      { name: 'Delhi', district: 'Delhi', state: 'Delhi', lat: 28.7041, lon: 77.1025 },
+      { name: 'Mumbai', district: 'Mumbai', state: 'Maharashtra', lat: 19.0760, lon: 72.8777 },
+      { name: 'Pune', district: 'Pune', state: 'Maharashtra', lat: 18.5204, lon: 73.8567 },
+      { name: 'Nagpur', district: 'Nagpur', state: 'Maharashtra', lat: 21.1458, lon: 79.0882 },
+      { name: 'Ahmednagar', district: 'Ahmednagar', state: 'Maharashtra', lat: 19.0948, lon: 74.7380 },
+      { name: 'Bangalore', district: 'Bangalore', state: 'Karnataka', lat: 12.9716, lon: 77.5946 },
+      { name: 'Mysore', district: 'Mysore', state: 'Karnataka', lat: 12.2958, lon: 76.6394 },
+      { name: 'Hubli', district: 'Dharwad', state: 'Karnataka', lat: 15.3647, lon: 75.1249 },
+      { name: 'Chennai', district: 'Chennai', state: 'Tamil Nadu', lat: 13.0827, lon: 80.2707 },
+      { name: 'Coimbatore', district: 'Coimbatore', state: 'Tamil Nadu', lat: 11.0168, lon: 76.9558 },
+      { name: 'Madurai', district: 'Madurai', state: 'Tamil Nadu', lat: 9.9252, lon: 78.1198 },
+      { name: 'Tiruchirappalli', district: 'Tiruchirappalli', state: 'Tamil Nadu', lat: 10.7905, lon: 78.7045 },
+      { name: 'Kolkata', district: 'Kolkata', state: 'West Bengal', lat: 22.5726, lon: 88.3639 },
+      { name: 'Howrah', district: 'Howrah', state: 'West Bengal', lat: 22.5958, lon: 88.2896 },
+      { name: 'Asansol', district: 'Paschim Bardhaman', state: 'West Bengal', lat: 23.6736, lon: 86.9523 },
+      { name: 'Lucknow', district: 'Lucknow', state: 'Uttar Pradesh', lat: 26.8467, lon: 80.9462 },
+      { name: 'Varanasi', district: 'Varanasi', state: 'Uttar Pradesh', lat: 25.3176, lon: 82.9739 },
+      { name: 'Agra', district: 'Agra', state: 'Uttar Pradesh', lat: 27.1767, lon: 78.0081 },
+      { name: 'Kanpur', district: 'Kanpur', state: 'Uttar Pradesh', lat: 26.4499, lon: 80.3319 },
+      { name: 'Patna', district: 'Patna', state: 'Bihar', lat: 25.5941, lon: 85.1376 },
+      { name: 'Gaya', district: 'Gaya', state: 'Bihar', lat: 24.7967, lon: 85.0076 },
+      { name: 'Muzaffarpur', district: 'Muzaffarpur', state: 'Bihar', lat: 26.1209, lon: 85.3647 },
+      { name: 'Jaipur', district: 'Jaipur', state: 'Rajasthan', lat: 26.9124, lon: 75.7873 },
+      { name: 'Jodhpur', district: 'Jodhpur', state: 'Rajasthan', lat: 26.2389, lon: 73.0243 },
+      { name: 'Udaipur', district: 'Udaipur', state: 'Rajasthan', lat: 24.5854, lon: 73.7125 },
+      { name: 'Kota', district: 'Kota', state: 'Rajasthan', lat: 25.2138, lon: 75.8648 },
+      { name: 'Bhopal', district: 'Bhopal', state: 'Madhya Pradesh', lat: 23.2599, lon: 77.4126 },
+      { name: 'Indore', district: 'Indore', state: 'Madhya Pradesh', lat: 22.7196, lon: 75.8577 },
+      { name: 'Jabalpur', district: 'Jabalpur', state: 'Madhya Pradesh', lat: 23.1815, lon: 79.9864 },
+      { name: 'Gwalior', district: 'Gwalior', state: 'Madhya Pradesh', lat: 26.2124, lon: 78.1772 },
+      { name: 'Ahmedabad', district: 'Ahmedabad', state: 'Gujarat', lat: 23.0225, lon: 72.5714 },
+      { name: 'Surat', district: 'Surat', state: 'Gujarat', lat: 21.1702, lon: 72.8311 },
+      { name: 'Vadodara', district: 'Vadodara', state: 'Gujarat', lat: 22.3072, lon: 73.1812 },
+      { name: 'Rajkot', district: 'Rajkot', state: 'Gujarat', lat: 22.3039, lon: 70.8022 },
+      { name: 'Guwahati', district: 'Kamrup', state: 'Assam', lat: 26.1445, lon: 91.7362 },
+      { name: 'Silchar', district: 'Cachar', state: 'Assam', lat: 24.8333, lon: 92.7833 },
+      { name: 'Dibrugarh', district: 'Dibrugarh', state: 'Assam', lat: 27.4800, lon: 95.0000 }
+    ];
+    res.json(villages);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/weather-by-coords
+app.get('/api/weather-by-coords', async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+    const latNum = parseFloat(lat);
+    const lonNum = parseFloat(lon);
+    
+    const response = await axios.get(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`
+    );
+
+    const data = response.data;
+    
+    // Map to better location names for known areas
+    let locationName = data.name;
+    
+    // Coimbatore area mapping
+    if (data.name.toLowerCase().includes('singanallur') || 
+        data.name.toLowerCase().includes('coimbatore') ||
+        (latNum >= 10.9 && latNum <= 11.2 && lonNum >= 76.9 && lonNum <= 77.1)) {
+      locationName = 'Coimbatore';
+    }
+    // Chennai area
+    else if (data.name.toLowerCase().includes('chennai') || 
+             (latNum >= 12.8 && latNum <= 13.2 && lonNum >= 80.1 && lonNum <= 80.4)) {
+      locationName = 'Chennai';
+    }
+    // Delhi area
+    else if (data.name.toLowerCase().includes('delhi') ||
+             (latNum >= 28.4 && latNum <= 28.9 && lonNum >= 76.8 && lonNum <= 77.4)) {
+      locationName = 'Delhi';
+    }
+    // Hyderabad area
+    else if (data.name.toLowerCase().includes('hyderabad') ||
+             (latNum >= 17.2 && latNum <= 17.5 && lonNum >= 78.3 && lonNum <= 78.7)) {
+      locationName = 'Hyderabad';
+    }
+    // Bangalore area
+    else if (data.name.toLowerCase().includes('bengaluru') || data.name.toLowerCase().includes('bangalore') ||
+             (latNum >= 12.8 && latNum <= 13.2 && lonNum >= 77.4 && lonNum <= 77.8)) {
+      locationName = 'Bangalore';
+    }
+    
+    res.json({
+      temperature: data.main.temp,
+      humidity: data.main.humidity,
+      windSpeed: data.wind.speed,
+      weatherCondition: data.weather[0].main,
+      weatherIcon: `https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png`,
+      location: locationName,
+      exactLocation: data.name,
+      description: data.weather[0].description,
+      coordinates: { lat: latNum, lon: lonNum },
+      pressure: data.main.pressure,
+      visibility: data.visibility,
+      sunrise: data.sys.sunrise,
+      sunset: data.sys.sunset,
+      region: 'Tamil Nadu'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch weather data' });
+  }
+});
+
+// GET /api/forecast-by-coords
+app.get('/api/forecast-by-coords', async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+    
+    const response = await axios.get(
+      `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${WEATHER_API_KEY}&units=metric`
+    );
+
+    const forecasts = [];
+    const dailyData = {};
+
+    response.data.list.forEach(item => {
+      const date = item.dt_txt.split(' ')[0];
+      if (!dailyData[date] || item.dt_txt.includes('12:00:00')) {
+        dailyData[date] = {
+          date: date,
+          temperature: item.main.temp,
+          tempMin: item.main.temp_min,
+          tempMax: item.main.temp_max,
+          humidity: item.main.humidity,
+          weatherCondition: item.weather[0].main,
+          weatherIcon: `https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`,
+          windSpeed: item.wind.speed,
+          description: item.weather[0].description
+        };
+      }
+    });
+
+    Object.values(dailyData).slice(0, 7).forEach(day => {
+      forecasts.push(day);
+    });
+
+    const heatwave = forecasts.some(f => f.temperature > 38);
+    const drought = forecasts.filter(f => f.humidity < 40).length >= 5;
+    const heavyRain = forecasts.some(f => f.humidity > 80);
+
+    res.json({
+      forecasts,
+      alerts: {
+        heatwave,
+        drought,
+        heavyRain
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch forecast data' });
+  }
+});
+
+// POST /agent-login
+app.post('/api/agent-login', async (req, res) => {
+  try {
+    const { agentId, password } = req.body;
+    
+    // Demo agent credentials
+    if (agentId === 'AGT001' && password === 'agent123') {
+      const token = jwt.sign({ id: agentId, type: 'agent' }, JWT_SECRET, { expiresIn: '24h' });
+      res.json({ success: true, token, agentId, message: 'Login successful' });
+    } else {
+      res.status(401).json({ error: 'Invalid credentials' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /farmer-login
+app.post('/api/farmer-login', async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+    
+    // Demo OTP check
+    if (otp === '123456') {
+      const token = jwt.sign({ id: phone, type: 'farmer' }, JWT_SECRET, { expiresIn: '24h' });
+      res.json({ success: true, token, phone, message: 'Login successful' });
+    } else {
+      res.status(401).json({ error: 'Invalid OTP' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ==================== ROUTES ====================
 

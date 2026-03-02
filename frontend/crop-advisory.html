@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Advisory - Farmers Helping Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-green: #1b5e20;
+            --secondary-green: #2e7d32;
+            --light-green: #4caf50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f9f5;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+        }
+
+        .problem-card {
+            border: none;
+            border-radius: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .problem-card:hover, .problem-card.active {
+            border: 2px solid var(--light-green);
+            background: #f0fdf4;
+        }
+
+        .advisory-box {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .crop-icon {
+            font-size: 2rem;
+            color: var(--light-green);
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--light-green);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="dashboard.html">
+                <i class="fas fa-leaf me-2"></i>Farmers Portal
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html"><i class="fas fa-home me-1"></i>Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="schemes.html"><i class="fas fa-gift me-1"></i>Schemes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="crop-advisory.html"><i class="fas fa-seedling me-1"></i>Crop Advisory</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="market.html"><i class="fas fa-chart-line me-1"></i>Market Prices</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <a href="index.html" class="btn btn-outline-light btn-sm" onclick="logout()">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row">
+            <!-- Left Panel - Problem Selection -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-search-plus me-2"></i>Describe Your Problem</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Select Crop</label>
+                            <select class="form-select" id="cropSelect">
+                                <option value="">Choose crop...</option>
+                                <option value="paddy">Paddy / Rice</option>
+                                <option value="wheat">Wheat</option>
+                                <option value="cotton">Cotton</option>
+                                <option value="groundnut">Groundnut</option>
+                                <option value="maize">Maize</option>
+                                <option value="sugarcane">Sugarcane</option>
+                                <option value="tomato">Tomato</option>
+                                <option value="potato">Potato</option>
+                                <option value="onion">Onion</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Problem Category</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-outline-success btn-sm problem-btn" onclick="selectProblem('pest')">
+                                    <i class="fas fa-bug me-1"></i>Pest
+                                </button>
+                                <button class="btn btn-outline-success btn-sm problem-btn" onclick="selectProblem('disease')">
+                                    <i class="fas fa-virus me-1"></i>Disease
+                                </button>
+                                <button class="btn btn-outline-success btn-sm problem-btn" onclick="selectProblem('nutrient')">
+                                    <i class="fas fa-flask me-1"></i>Nutrient
+                                </button>
+                                <button class="btn btn-outline-success btn-sm problem-btn" onclick="selectProblem('water')">
+                                    <i class="fas fa-tint me-1"></i>Water
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Describe Symptoms</label>
+                            <textarea class="form-control" id="symptoms" rows="3" placeholder="e.g., Yellow spots on leaves, plants wilting..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Or Upload Photo</label>
+                            <input type="file" class="form-control" accept="image/*">
+                            <small class="text-muted">Take a clear photo of affected plant</small>
+                        </div>
+
+                        <button class="btn btn-success w-100" onclick="getAdvisory()">
+                            <i class="fas fa-search me-2"></i>Get Advisory
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Problems -->
+                <div class="card mt-3">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0"><i class="fas fa-bolt me-2 text-warning"></i>Common Problems</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <button class="list-group-item list-group-item-action" onclick="quickProblem('Yellowing leaves')">
+                                <i class="fas fa-leaf text-warning me-2"></i>Yellowing leaves
+                            </button>
+                            <button class="list-group-item list-group-item-action" onclick="quickProblem('Wilting plants')">
+                                <i class="fas fa-tint text-info me-2"></i>Wilting plants
+                            </button>
+                            <button class="list-group-item list-group-item-action" onclick="quickProblem('Holes in leaves')">
+                                <i class="fas fa-bug text-danger me-2"></i>Holes in leaves
+                            </button>
+                            <button class="list-group-item list-group-item-action" onclick="quickProblem('White spots')">
+                                <i class="fas fa-paint-brush text-secondary me-2"></i>White spots
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Advisory -->
+            <div class="col-lg-8">
+                <div class="advisory-box p-4" id="advisoryBox">
+                    <div class="text-center py-5">
+                        <i class="fas fa-seedling crop-icon mb-3"></i>
+                        <h4>Crop Advisory</h4>
+                        <p class="text-muted">Select your crop and describe the problem to get expert advice</p>
+                    </div>
+                </div>
+
+                <!-- Seasonal Advice -->
+                <div class="card mt-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-calendar me-2"></i>Seasonal Advice</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-3">
+                                <i class="fas fa-sun text-warning fa-2x mb-2"></i>
+                                <h6>Current Season</h6>
+                                <p class="text-muted small mb-0">Kharif (Monsoon)</p>
+                            </div>
+                            <div class="col-md-4 text-center mb-3">
+                                <i class="fas fa-cloud-rain text-info fa-2x mb-2"></i>
+                                <h6>Rainfall</h6>
+                                <p class="text-muted small mb-0">Normal expected</p>
+                            </div>
+                            <div class="col-md-4 text-center mb-3">
+                                <i class="fas fathermometer-half text-danger fa-2x mb-2"></i>
+                                <h6>Temperature</h6>
+                                <p class="text-muted small mb-0">25-35°C</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommended Crops -->
+                <div class="card mt-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="fas fa-check-circle text-success me-2"></i>Recommended Crops This Season</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6 col-md-3 text-center">
+                                <i class="fas fa-seedling text-success fa-2x"></i>
+                                <p class="mb-0 mt-2"><strong>Paddy</strong></p>
+                                <small class="text-muted">High demand</small>
+                            </div>
+                            <div class="col-6 col-md-3 text-center">
+                                <i class="fas fa-seedling text-success fa-2x"></i>
+                                <p class="mb-0 mt-2"><strong>Groundnut</strong></p>
+                                <small class="text-muted">Good price</small>
+                            </div>
+                            <div class="col-6 col-md-3 text-center">
+                                <i class="fas fa-seedling text-success fa-2x"></i>
+                                <p class="mb-0 mt-2"><strong>Cotton</strong></p>
+                                <small class="text-muted">MSP available</small>
+                            </div>
+                            <div class="col-6 col-md-3 text-center">
+                                <i class="fas fa-seedling text-success fa-2x"></i>
+                                <p class="mb-0 mt-2"><strong>Maize</strong></p>
+                                <small class="text-muted">Fodder + Grain</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedProblem = '';
+
+        function selectProblem(type) {
+            selectedProblem = type;
+            document.querySelectorAll('.problem-btn').forEach(btn => {
+                btn.classList.remove('active', 'btn-success');
+                if (btn.textContent.toLowerCase().includes(type)) {
+                    btn.classList.add('active', 'btn-success');
+                }
+            });
+        }
+
+        function getAdvisory() {
+            const crop = document.getElementById('cropSelect').value;
+            const symptoms = document.getElementById('symptoms').value;
+
+            if (!crop) {
+                alert('Please select a crop');
+                return;
+            }
+
+            let advisory = '';
+
+            if (selectedProblem === 'pest' || symptoms.toLowerCase().includes('bug') || symptoms.toLowerCase().includes('hole')) {
+                advisory = getPestAdvisory(crop);
+            } else if (selectedProblem === 'disease' || symptoms.toLowerCase().includes('spot') || symptoms.toLowerCase().includes('disease')) {
+                advisory = getDiseaseAdvisory(crop);
+            } else if (selectedProblem === 'nutrient' || symptoms.toLowerCase().includes('yellow')) {
+                advisory = getNutrientAdvisory(crop);
+            } else if (selectedProblem === 'water' || symptoms.toLowerCase().includes('wilt')) {
+                advisory = getWaterAdvisory(crop);
+            } else {
+                advisory = getGeneralAdvisory(crop);
+            }
+
+            document.getElementById('advisoryBox').innerHTML = advisory;
+        }
+
+        function getPestAdvisory(crop) {
+            return `
+                <h5 class="text-danger"><i class="fas fa-bug me-2"></i>Pest Management Advisory</h5>
+                <div class="alert alert-warning">
+                    <strong>Diagnosis:</strong> Pest infestation detected
+                </div>
+                <h6 class="mt-3">Recommended Actions:</h6>
+                <ol class="mt-2">
+                    <li class="mb-2"><strong>Organic Option:</strong> Spray Neem oil (5ml per liter water) every 7 days</li>
+                    <li class="mb-2"><strong>Chemical Option:</strong> Imidacloprid 17.8% SL - 0.5ml per liter water</li>
+                    <li class="mb-2"><strong>Set up pheromone traps:</strong> 5-10 per acre</li>
+                    <li class="mb-2"><strong>Encourage beneficial insects:</strong> Ladybugs, spiders</li>
+                    <li class="mb-2"><strong>Remove affected parts:</strong> Burn or bury severely affected portions</li>
+                </ol>
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle me-2"></i>For severe infestation, contact your local agriculture officer
+                </div>
+            `;
+        }
+
+        function getDiseaseAdvisory(crop) {
+            return `
+                <h5 class="text-danger"><i class="fas fa-virus me-2"></i>Disease Management Advisory</h5>
+                <div class="alert alert-danger">
+                    <strong>Diagnosis:</strong> Possible fungal/bacterial infection
+                </div>
+                <h6 class="mt-3">Recommended Actions:</h6>
+                <ol class="mt-2">
+                    <li class="mb-2"><strong>Fungal:</strong> Apply Copper Oxychloride 50% - 3g per liter</li>
+                    <li class="mb-2"><strong>Bacterial:</strong> Remove affected plants, apply Streptocycline 1g per 10 liters</li>
+                    <li class="mb-2"><strong>Improve air circulation:</strong> Proper spacing between plants</li>
+                    <li class="mb-2"><strong>Avoid overhead irrigation:</strong> Water at base of plants</li>
+                    <li class="mb-2"><strong>Remove crop residues:</strong> Don't leave affected debris in field</li>
+                </ol>
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-flask me-2"></i>Send sample to lab for exact diagnosis
+                </div>
+            `;
+        }
+
+        function getNutrientAdvisory(crop) {
+            return `
+                <h5 class="text-warning"><i class="fas fa-flask me-2"></i>Nutrient Deficiency Advisory</h5>
+                <div class="alert alert-warning">
+                    <strong>Diagnosis:</strong> Nutrient deficiency - likely Nitrogen or Iron
+                </div>
+                <h6 class="mt-3">Recommended Actions:</h6>
+                <ol class="mt-2">
+                    <li class="mb-2"><strong>Nitrogen (N):</strong> Apply Urea 46% - 50-100 kg/acre</li>
+                    <li class="mb-2"><strong>Iron (Fe):</strong> Spray FeSO4 0.5% solution</li>
+                    <li class="mb-2"><strong>Apply FYM:</strong> Farmyard manure 2-3 tons/acre</li>
+                    <li class="mb-2"><strong>Soil test:</strong> Get soil tested for exact deficiency</li>
+                    <li class="mb-2"><strong>Foliar spray:</strong> Water soluble fertilizers for quick response</li>
+                </ol>
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-file-alt me-2"></i>Apply based on soil test results for best results
+                </div>
+            `;
+        }
+
+        function getWaterAdvisory(crop) {
+            return `
+                <h5 class="text-info"><i class="fas fa-tint me-2"></i>Water Management Advisory</h5>
+                <div class="alert alert-info">
+                    <strong>Diagnosis:</strong> Water stress - too much or too little
+                </div>
+                <h6 class="mt-3">Recommended Actions:</h6>
+                <ol class="mt-2">
+                    <li class="mb-2"><strong>For drought:</strong> Apply mulch, use drip irrigation</li>
+                    <li class="mb-2"><strong>For waterlogging:</strong> Improve drainage, create raised beds</li>
+                    <li class="mb-2"><strong>Best practice:</strong> 2-3 cm water per week</li>
+                    <li class="mb-2"><strong>Check soil moisture:</strong> Use tensiometer or hand method</li>
+                    <li class="mb-2"><strong>Schedule:</strong> Irrigate early morning or evening</li>
+                </ol>
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-tint-slash me-2"></i>Consider rainwater harvesting structures
+                </div>
+            `;
+        }
+
+        function getGeneralAdvisory(crop) {
+            return `
+                <h5 class="text-success"><i class="fas fa-clipboard-check me-2"></i>General Crop Advisory</h5>
+                <div class="alert alert-success">
+                    <strong>Keep monitoring your crop regularly</strong>
+                </div>
+                <h6 class="mt-3">General Recommendations:</h6>
+                <ol class="mt-2">
+                    <li class="mb-2"><strong>Inspect daily:</strong> Check plants for any changes</li>
+                    <li class="mb-2"><strong>Water properly:</strong> 2-3 cm per week, avoid overwatering</li>
+                    <li class="mb-2"><strong>Apply fertilizer:</strong> Use balanced NPK as per crop stage</li>
+                    <li class="mb-2"><strong>Weed control:</strong> Remove weeds regularly</li>
+                    <li class="mb-2"><strong>Record changes:</strong> Note any problems for expert consultation</li>
+                </ol>
+                <div class="alert alert-primary mt-3">
+                    <i class="fas fa-phone me-2"></i>For detailed advice, visit nearest BetterSolve Booth
+                </div>
+            `;
+        }
+
+        function quickProblem(problem) {
+            document.getElementById('symptoms').value = problem;
+            getAdvisory();
+        }
+
+        function logout() {
+            sessionStorage.clear();
+        }
+    </script>
+</body>
+</html>

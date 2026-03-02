@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate Alerts - Smart Farmers Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary-green: #1b5e20; --secondary-green: #2e7d32; --light-green: #4caf50; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f9f5; }
+        .sidebar { min-height: 100vh; background: linear-gradient(180deg, var(--primary-green) 0%, #0d3d12 100%); color: white; }
+        .sidebar .nav-link { color: rgba(255,255,255,0.8); padding: 12px 20px; border-radius: 8px; margin: 4px 0; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background: rgba(255,255,255,0.15); color: white; }
+        .alert-critical { border-left: 4px solid #dc3545; }
+        .alert-warning { border-left: 4px solid #ffc107; }
+        .alert-info { border-left: 4px solid #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2 sidebar p-0">
+                <div class="text-center py-4 border-bottom border-secondary">
+                    <i class="fas fa-leaf fa-2x mb-2"></i>
+                    <h6 class="fw-bold">Booth Agent</h6>
+                </div>
+                <div class="p-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a class="nav-link" href="booth-dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="register-farmer.html"><i class="fas fa-user-plus"></i> Register Farmer</a></li>
+                        <li class="nav-item"><a class="nav-link" href="farmers-list.html"><i class="fas fa-users"></i> Farmers List</a></li>
+                        <li class="nav-item"><a class="nav-link" href="crop-monitoring.html"><i class="fas fa-chart-line"></i> Crop Monitoring</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="climate-alerts.html"><i class="fas fa-cloud-sun"></i> Climate Alerts</a></li>
+                        <li class="nav-item"><a class="nav-link" href="reports.html"><i class="fas fa-file-alt"></i> Reports</a></li>
+                        <li class="nav-item"><a class="nav-link" href="index.html" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-10 p-4">
+                <h4 class="mb-4"><i class="fas fa-cloud-sun me-2 text-success"></i>Climate Alerts</h4>
+
+                <!-- Current Weather -->
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <div class="card bg-gradient bg-primary text-white">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <h2 id="currentTemp">34°C</h2>
+                                        <p class="mb-0" id="currentCondition">Clear Sky</p>
+                                        <small id="location">Chittoor, Andhra Pradesh</small>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <div class="row">
+                                            <div class="col">
+                                                <i class="fas fa-tint fa-lg"></i>
+                                                <p class="mb-0"><small>Humidity</small></p>
+                                                <strong id="humidity">23%</strong>
+                                            </div>
+                                            <div class="col">
+                                                <i class="fas fa-wind fa-lg"></i>
+                                                <p class="mb-0"><small>Wind</small></p>
+                                                <strong id="windSpeed">12 km/h</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Alerts -->
+                <h5 class="mb-3">Active Alerts</h5>
+                <div class="row mb-4" id="alertsContainer">
+                    <div class="col-md-6 mb-3">
+                        <div class="card alert-critical">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6><i class="fas fa-fire text-danger me-2"></i>Heatwave Warning</h6>
+                                        <p class="mb-0 text-muted">Temperature above 38°C expected for next 3 days</p>
+                                    </div>
+                                    <span class="badge bg-danger">Critical</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card alert-warning">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6><i class="fas fa-tint-slash text-warning me-2"></i>Water Scarcity</h6>
+                                        <p class="mb-0 text-muted">Low humidity (below 30%) for next 5 days</p>
+                                    </div>
+                                    <span class="badge bg-warning">Warning</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card alert-info">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6><i class="fas fa-cloud-rain text-info me-2"></i>Monsoon Update</h6>
+                                        <p class="mb-0 text-muted">Monsoon expected by July 15th</p>
+                                    </div>
+                                    <span class="badge bg-info">Info</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7-Day Forecast -->
+                <h5 class="mb-3">7-Day Forecast</h5>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row text-center" id="forecastContainer">
+                            <div class="col">
+                                <p class="text-muted">Today</p>
+                                <i class="fas fa-sun text-warning fa-2x"></i>
+                                <h5>34°C</h5>
+                            </div>
+                            <div class="col">
+                                <p class="text-muted">Tomorrow</p>
+                                <i class="fas fa-sun text-warning fa-2x"></i>
+                                <h5>35°C</h5>
+                            </div>
+                            <div class="col">
+                                <p class="text-muted">Day 3</p>
+                                <i class="fas fa-cloud text-secondary fa-2x"></i>
+                                <h5>33°C</h5>
+                            </div>
+                            <div class="col">
+                                <p class="text-muted">Day 4</p>
+                                <i class="fas fa-cloud text-secondary fa-2x"></i>
+                                <h5>32°C</h5>
+                            </div>
+                            <div class="col">
+                                <p class="text-muted">Day 5</p>
+                                <i class="fas fa-cloud-rain text-info fa-2x"></i>
+                                <h5>30°C</h5>
+                            </div>
+                            <div class="col">
+                                <p class="text-muted">Day 6</p>
+                                <i class="fas fa-cloud-rain text-info fa-2x"></i>
+                                <h5>29°C</h5>
+                            </div>
+                            <div class="col">
+                                <p class="text-muted">Day 7</p>
+                                <i class="fas fa-cloud text-secondary fa-2x"></i>
+                                <h5>31°C</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <h5 class="mb-3">Recommendations</h5>
+                <div class="card">
+                    <div class="card-body">
+                        <ul class="mb-0">
+                            <li class="mb-2"><strong>For Paddy Farmers:</strong> Delay transplanting until monsoon arrives. Use mulching to conserve moisture.</li>
+                            <li class="mb-2"><strong>For Groundnut Farmers:</strong> Apply light irrigation early morning. Avoid pesticide spraying during peak heat.</li>
+                            <li><strong>For All Farmers:</strong> Install shade nets for sensitive crops. Use drip irrigation to save water.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function loadWeatherData() {
+            try {
+                const response = await fetch('http://localhost:5000/api/weather?location=Chittoor');
+                const data = await response.json();
+                
+                document.getElementById('currentTemp').textContent = Math.round(data.temperature) + '°C';
+                document.getElementById('currentCondition').textContent = data.weatherCondition;
+                document.getElementById('humidity').textContent = data.humidity + '%';
+                document.getElementById('windSpeed').textContent = Math.round(data.windSpeed * 3.6) + ' km/h';
+                document.getElementById('location').textContent = data.location + ', AP';
+
+                // Get forecast
+                const forecastRes = await fetch('http://localhost:5000/api/forecast?location=Chittoor');
+                const forecast = await forecastRes.json();
+                
+                if (forecast.forecasts) {
+                    const days = ['Today', 'Tomorrow', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'];
+                    let html = '';
+                    forecast.forecasts.slice(0, 7).forEach((day, i) => {
+                        const icon = getWeatherIcon(day.weatherCondition);
+                        html += `
+                            <div class="col">
+                                <p class="text-muted">${days[i]}</p>
+                                <i class="${icon} fa-2x"></i>
+                                <h5>${Math.round(day.temperature)}°C</h5>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('forecastContainer').innerHTML = html;
+                }
+
+                // Update alerts based on weather
+                if (forecast.alerts) {
+                    const container = document.getElementById('alertsContainer');
+                    let alertsHTML = '';
+                    
+                    if (forecast.alerts.heatwave) {
+                        alertsHTML += `
+                            <div class="col-md-6 mb-3">
+                                <div class="card alert-critical">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div><h6><i class="fas fa-fire text-danger me-2"></i>Heatwave Warning</h6><p class="mb-0 text-muted">Temperature above 38°C expected</p></div>
+                                            <span class="badge bg-danger">Critical</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+                    }
+                    
+                    if (forecast.alerts.drought) {
+                        alertsHTML += `
+                            <div class="col-md-6 mb-3">
+                                <div class="card alert-warning">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div><h6><i class="fas fa-tint-slash text-warning me-2"></i>Drought Watch</h6><p class="mb-0 text-muted">Low humidity expected for 5+ days</p></div>
+                                            <span class="badge bg-warning">Warning</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+                    }
+                    
+                    if (forecast.alerts.heavyRain) {
+                        alertsHTML += `
+                            <div class="col-md-6 mb-3">
+                                <div class="card alert-info">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div><h6><i class="fas fa-cloud-rain text-info me-2"></i>Heavy Rain Alert</h6><p class="mb-0 text-muted">Heavy rainfall expected</p></div>
+                                            <span class="badge bg-info">Info</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+                    }
+                    
+                    if (alertsHTML) container.innerHTML = alertsHTML;
+                }
+            } catch (error) {
+                console.log('Using default data');
+            }
+        }
+
+        function getWeatherIcon(condition) {
+            const icons = {
+                'Clear': 'fas fa-sun text-warning',
+                'Clouds': 'fas fa-cloud text-secondary',
+                'Rain': 'fas fa-cloud-rain text-info',
+                'Drizzle': 'fas fa-cloud-rain text-info',
+                'Thunderstorm': 'fas fa-bolt text-danger'
+            };
+            return icons[condition] || 'fas fa-cloud text-secondary';
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        loadWeatherData();
+    </script>
+</body>
+</html>

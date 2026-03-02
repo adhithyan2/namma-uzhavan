@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Dashboard - Smart Farmers Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary-green: #1b5e20;
+            --secondary-green: #2e7d32;
+            --light-green: #4caf50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f9f5;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        }
+
+        .sidebar .nav-link {
+            color: #333;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 4px 0;
+        }
+
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: var(--light-green);
+            color: white;
+        }
+
+        .stat-card {
+            border-radius: 12px;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .weather-card {
+            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            color: white;
+            border-radius: 12px;
+        }
+
+        .crop-card {
+            border-left: 4px solid var(--light-green);
+        }
+
+        .risk-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .risk-low { background: #e8f5e9; color: #2e7d32; }
+        .risk-medium { background: #fff3e0; color: #f57c00; }
+        .risk-high { background: #ffebee; color: #c62828; }
+
+        .voice-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .voice-btn:hover {
+            background: var(--secondary-green);
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-leaf me-2"></i>Smart Farmers Portal
+            </a>
+            <div class="d-flex align-items-center">
+                <button class="btn btn-outline-light btn-sm me-2">
+                    <i class="fas fa-bell me-1"></i><span class="badge bg-danger">3</span>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i><span id="userName">Farmer</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>My Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="index.html" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Sidebar -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="p-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="farmer-dashboard.html">
+                                <i class="fas fa-home"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="climate-prediction.html">
+                                <i class="fas fa-cloud-sun"></i> Climate Prediction
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="crop-recommendation.html">
+                                <i class="fas fa-seedling"></i> Crop Suggestions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="risk-alerts.html">
+                                <i class="fas fa-exclamation-triangle"></i> Risk Alerts
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="voice-assistant.html">
+                                <i class="fas fa-microphone"></i> Voice Assistant
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="schemes.html">
+                                <i class="fas fa-gift"></i> Schemes
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="market.html">
+                                <i class="fas fa-chart-line"></i> Market Prices
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="help.html">
+                                <i class="fas fa-question-circle"></i> Help
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 p-4">
+                <!-- Welcome Banner -->
+                <div class="alert alert-success d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 class="mb-0"><i class="fas fa-sun me-2"></i>Welcome back, <span id="welcomeName">Ramesh Kumar</span>!</h5>
+                        <small>Here's your farm summary for today.</small>
+                    </div>
+                    <a href="crop-recommendation.html" class="btn btn-success">
+                        <i class="fas fa-lightbulb me-1"></i>Get Crop Advice
+                    </a>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card stat-card bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <small>My Farm</small>
+                                        <h3 class="mb-0">5.0 Acres</h3>
+                                    </div>
+                                    <i class="fas fa-farm fa-2x opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card bg-info text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <small>Current Crop</small>
+                                        <h3 class="mb-0">Paddy</h3>
+                                    </div>
+                                    <i class="fas fa-leaf fa-2x opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card bg-warning text-dark">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <small>Risk Level</small>
+                                        <h3 class="mb-0">Low</h3>
+                                    </div>
+                                    <i class="fas fa-shield-alt fa-2x opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stat-card bg-primary text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <small>Soil Health</small>
+                                        <h3 class="mb-0">Good</h3>
+                                    </div>
+                                    <i class="fas fa-flask fa-2x opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weather & Quick Actions -->
+                <div class="row mb-4">
+                    <!-- Location Selection -->
+                    <div class="col-md-4">
+                        <div class="weather-card p-3">
+                            <h6 class="mb-3"><i class="fas fa-map-marker-alt me-2"></i>Select Your Location</h6>
+                            <select class="form-select mb-3" id="locationSelect" onchange="updateWeather()">
+                                <option value="">Select Village...</option>
+                                <option value="Kallur">Kallur, Andhra Pradesh</option>
+                                <option value="Chittoor">Chittoor, Andhra Pradesh</option>
+                                <option value="Tirupati">Tirupati, Andhra Pradesh</option>
+                                <option value="Pileru">Pileru, Andhra Pradesh</option>
+                                <option value="Hyderabad">Hyderabad, Telangana</option>
+                                <option value="Delhi">Delhi</option>
+                                <option value="Mumbai">Mumbai, Maharashtra</option>
+                                <option value="Bangalore">Bangalore, Karnataka</option>
+                                <option value="Chennai">Chennai, Tamil Nadu</option>
+                                <option value="Kolkata">Kolkata, West Bengal</option>
+                            </select>
+                            <button class="btn btn-light btn-sm" onclick="detectLocation()">
+                                <i class="fas fa-crosshairs me-1"></i>Detect My Location
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="weather-card p-3">
+                            <h6 class="mb-3"><i class="fas fa-cloud-sun me-2"></i>Weather Forecast</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h2 id="currentTemp">28°C</h2>
+                                    <p class="mb-0" id="currentCondition">Loading...</p>
+                                </div>
+                                <i class="fas fa-sun fa-3x opacity-75" id="weatherIcon"></i>
+                            </div>
+                            <hr>
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <small>Humidity<br><strong id="humidity">--%</strong></small>
+                                </div>
+                                <div class="col-4">
+                                    <small>Wind<br><strong id="windSpeed">-- km/h</strong></small>
+                                </div>
+                                <div class="col-4">
+                                    <small>Rain<br><strong id="rainChance">--%</strong></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-header bg-white">
+                                <h6 class="mb-0"><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <a href="crop-recommendation.html" class="text-decoration-none">
+                                            <div class="text-center p-3 border rounded">
+                                                <i class="fas fa-lightbulb text-success fa-lg"></i>
+                                                <p class="mb-0 mt-2 small">Crop Advice</p>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="climate-prediction.html" class="text-decoration-none">
+                                            <div class="text-center p-3 border rounded">
+                                                <i class="fas fa-cloud text-success fa-lg"></i>
+                                                <p class="mb-0 mt-2 small">Weather</p>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="risk-alerts.html" class="text-decoration-none">
+                                            <div class="text-center p-3 border rounded">
+                                                <i class="fas fa-bell text-success fa-lg"></i>
+                                                <p class="mb-0 mt-2 small">Alerts</p>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="market.html" class="text-decoration-none">
+                                            <div class="text-center p-3 border rounded">
+                                                <i class="fas fa-tags text-success fa-lg"></i>
+                                                <p class="mb-0 mt-2 small">Prices</p>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Farm Details & Recommendations -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h6 class="mb-0"><i class="fas fa-info-circle me-2 text-success"></i>My Farm Details</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6 mb-2">
+                                        <small class="text-muted">Land Size</small>
+                                        <p class="mb-0 fw-bold">5.0 Acres</p>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <small class="text-muted">Soil Type</small>
+                                        <p class="mb-0 fw-bold">Loamy</p>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <small class="text-muted">Irrigation</small>
+                                        <p class="mb-0 fw-bold">Canal</p>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <small class="text-muted">Current Season</small>
+                                        <p class="mb-0 fw-bold">Kharif</p>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <small class="text-muted">Village</small>
+                                        <p class="mb-0 fw-bold">Kallur</p>
+                                    </div>
+                                    <div class="col-6 mb-2">
+                                        <small class="text-muted">District</small>
+                                        <p class="mb-0 fw-bold">Chittoor</p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-outline-success btn-sm mt-2">
+                                    <i class="fas fa-edit me-1"></i>Update Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h6 class="mb-0"><i class="fas fa-seedling me-2 text-success"></i>Recommended Crops</h6>
+                            </div>
+                            <div class="card-body" id="cropRecommendations">
+                                <div class="text-center text-muted">
+                                    <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                    <p>Select your location to get crop recommendations</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Alerts -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Risk Alerts</h6>
+                                <a href="risk-alerts.html" class="btn btn-sm btn-outline-success">View All</a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table mb-0">
+                                        <thead class="table-success">
+                                            <tr>
+                                                <th>Alert Type</th>
+                                                <th>Description</th>
+                                                <th>Severity</th>
+                                                <th>Recommended Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><i class="fas fa-tint text-info me-2"></i>Water</td>
+                                                <td>Rain expected in 3 days</td>
+                                                <td><span class="risk-badge risk-low">Low</span></td>
+                                                <td>Postpone irrigation</td>
+                                            </tr>
+                                            <tr>
+                                                <td><i class="fas fa-bug text-danger me-2"></i>Pest</td>
+                                                <td>Minor pest sighting in area</td>
+                                                <td><span class="risk-badge risk-medium">Medium</span></td>
+                                                <td>Monitor & spray neem oil</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Assistant -->
+    <button class="voice-btn" onclick="toggleVoice()">
+        <i class="fas fa-microphone"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const isGuest = sessionStorage.getItem('guestMode');
+        if (isGuest) {
+            document.getElementById('userName').textContent = 'Guest User';
+            document.getElementById('welcomeName').textContent = 'Guest User';
+        }
+
+        // Load villages on page load
+        async function loadVillages() {
+            try {
+                const response = await fetch('http://localhost:5000/api/villages');
+                const villages = await response.json();
+                
+                const select = document.getElementById('locationSelect');
+                villages.slice(0, 20).forEach(village => {
+                    const option = document.createElement('option');
+                    option.value = village.name;
+                    option.textContent = `${village.name}, ${village.state}`;
+                    option.dataset.lat = village.lat;
+                    option.dataset.lon = village.lon;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.log('Using default villages');
+            }
+        }
+
+        // Update weather based on selected location
+        async function updateWeather() {
+            const select = document.getElementById('locationSelect');
+            const location = select.value;
+            
+            if (!location) {
+                alert('Please select your village');
+                return;
+            }
+            
+            // Save selected location
+            localStorage.setItem('selectedLocation', location);
+            
+            try {
+                // Get current weather
+                const weatherRes = await fetch(`http://localhost:5000/api/weather?location=${location}`);
+                const weather = await weatherRes.json();
+                
+                document.getElementById('currentTemp').textContent = Math.round(weather.temperature) + '°C';
+                document.getElementById('currentCondition').textContent = weather.weatherCondition;
+                document.getElementById('humidity').textContent = weather.humidity + '%';
+                document.getElementById('windSpeed').textContent = Math.round(weather.windSpeed * 3.6) + ' km/h';
+                
+                // Get forecast for crop suggestions
+                const forecastRes = await fetch(`http://localhost:5000/api/forecast?location=${location}`);
+                const forecast = await forecastRes.json();
+                
+                // Get crop suggestions based on weather
+                const cropRes = await fetch(`http://localhost:5000/api/crop-suggestion?temperature=${weather.temperature}&rainfall=${weather.humidity}&soilType=Loamy&location=${location}`);
+                const crops = await cropRes.json();
+                
+                // Update recommended crops section
+                updateCropSuggestions(crops, weather);
+                
+                // Update weather icon
+                const icon = getWeatherIcon(weather.weatherCondition);
+                document.getElementById('weatherIcon').className = icon + ' fa-3x opacity-75';
+                
+            } catch (error) {
+                console.log('Weather error:', error);
+                alert('Could not fetch weather data. Please try again.');
+            }
+        }
+
+        function updateCropSuggestions(crops, weather) {
+            const container = document.getElementById('cropRecommendations');
+            
+            if (!crops || !crops.suggestions || crops.suggestions.length === 0) {
+                container.innerHTML = '<p class="text-muted">No crop recommendations available</p>';
+                return;
+            }
+
+            const suggestions = crops.suggestions.slice(0, 3);
+            
+            let html = '';
+            suggestions.forEach((crop, index) => {
+                const badgeClass = index === 0 ? 'bg-success' : index === 1 ? 'bg-info' : 'bg-secondary';
+                const badgeText = index === 0 ? 'Best Choice' : index === 1 ? 'Good Option' : 'Alternative';
+                const scoreColor = crop.score >= 70 ? 'text-success' : crop.score >= 50 ? 'text-warning' : 'text-danger';
+                
+                html += `
+                    <div class="crop-card p-3 mb-2 bg-light rounded">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>${crop.crop}</strong>
+                                <br><small class="text-muted">${crop.reason}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge ${badgeClass}">${badgeText}</span>
+                                <div class="mt-1"><small class="${scoreColor} fw-bold">${crop.score}% match</small></div>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted"><i class="fas fa-tint me-1"></i>Water: ${crop.waterNeed}</small>
+                            <small class="text-muted ms-2"><i class="fas fa-exclamation-triangle me-1"></i>Risk: ${crop.riskPercentage}%</small>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (crops.moneySavingSummary) {
+                html += `
+                    <div class="p-2 bg-success bg-opacity-10 rounded mt-2">
+                        <small class="text-success"><i class="fas fa-rupee-sign me-1"></i>${crops.moneySavingSummary.estimatedLossAvoided}</small>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+            
+            localStorage.setItem('cropSuggestions', JSON.stringify(crops));
+            localStorage.setItem('currentWeather', JSON.stringify(weather));
+        }
+
+        // Detect user location using browser geolocation
+        async function detectLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    try {
+                        const response = await fetch(`http://localhost:5000/api/weather-by-coords?lat=${lat}&lon=${lon}`);
+                        const data = await response.json();
+                        
+                        document.getElementById('currentTemp').textContent = Math.round(data.temperature) + '°C';
+                        document.getElementById('currentCondition').textContent = data.weatherCondition;
+                        document.getElementById('humidity').textContent = data.humidity + '%';
+                        document.getElementById('windSpeed').textContent = Math.round(data.windSpeed * 3.6) + ' km/h';
+                        
+                        // Get crop suggestions based on detected location
+                        const cropRes = await fetch(`http://localhost:5000/api/crop-suggestion?temperature=${data.temperature}&rainfall=${data.humidity}&soilType=Loamy&location=${data.location}`);
+                        const crops = await cropRes.json();
+                        updateCropSuggestions(crops, data);
+                        
+                        const icon = getWeatherIcon(data.weatherCondition);
+                        document.getElementById('weatherIcon').className = icon + ' fa-3x opacity-75';
+                        
+                        // Save location
+                        localStorage.setItem('selectedLocation', data.location);
+                        localStorage.setItem('userLat', lat);
+                        localStorage.setItem('userLon', lon);
+                        
+                        alert(`Location detected: ${data.location}\nTemperature: ${Math.round(data.temperature)}°C\nHumidity: ${data.humidity}%`);
+                    } catch (error) {
+                        alert('Could not get weather for your location');
+                    }
+                }, (error) => {
+                    alert('Could not detect location. Please enable location access or select manually.');
+                });
+            } else {
+                alert('Geolocation is not supported by this browser. Please select your village manually.');
+            }
+        }
+
+        function getWeatherIcon(condition) {
+            const icons = {
+                'Clear': 'fas fa-sun text-warning',
+                'Clouds': 'fas fa-cloud text-secondary',
+                'Rain': 'fas fa-cloud-rain text-info',
+                'Drizzle': 'fas fa-cloud-rain text-info',
+                'Thunderstorm': 'fas fa-bolt text-danger',
+                'Snow': 'fas fa-snowflake text-primary',
+                'Mist': 'fas fa-smog text-secondary',
+                'Fog': 'fas fa-smog text-secondary'
+            };
+            return icons[condition] || 'fas fa-cloud text-secondary';
+        }
+
+        function logout() {
+            sessionStorage.clear();
+        }
+
+        function toggleVoice() {
+            alert('Voice Assistant\n\nTry asking:\n- "What crop should I plant?"\n- "Will it rain this week?"\n- "What is my risk level?"');
+        }
+
+        // Initialize
+        loadVillages();
+        
+        // Load saved location weather
+        const savedLocation = localStorage.getItem('selectedLocation');
+        if (savedLocation) {
+            document.getElementById('locationSelect').value = savedLocation;
+            updateWeather();
+        }
+    </script>
+</body>
+</html>

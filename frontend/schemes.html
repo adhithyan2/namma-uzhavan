@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Government Schemes - Farmers Helping Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-green: #1b5e20;
+            --secondary-green: #2e7d32;
+            --light-green: #4caf50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f9f5;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+        }
+
+        .scheme-card {
+            border: none;
+            border-radius: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .scheme-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .scheme-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.8rem;
+        }
+
+        .search-box {
+            background: white;
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="dashboard.html">
+                <i class="fas fa-leaf me-2"></i>Farmers Portal
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html"><i class="fas fa-home me-1"></i>Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="schemes.html"><i class="fas fa-gift me-1"></i>Schemes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="crop-advisory.html"><i class="fas fa-seedling me-1"></i>Crop Advisory</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="market.html"><i class="fas fa-chart-line me-1"></i>Market Prices</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <a href="index.html" class="btn btn-outline-light btn-sm" onclick="logout()">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h4><i class="fas fa-gift me-2 text-success"></i>Government Schemes for Farmers</h4>
+                <p class="text-muted">Apply for subsidies, grants, and benefits available for farmers</p>
+            </div>
+            <div class="col-md-4">
+                <div class="search-box d-flex">
+                    <input type="text" class="form-control border-0" placeholder="Search schemes..." id="schemeSearch" onkeyup="filterSchemes()">
+                    <button class="btn btn-success"><i class="fas fa-search"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="mb-4">
+            <button class="btn btn-success active me-2" onclick="filterByCategory('all')">All</button>
+            <button class="btn btn-outline-success me-2" onclick="filterByCategory('subsidy')">Subsidy</button>
+            <button class="btn btn-outline-success me-2" onclick="filterByCategory('insurance')">Insurance</button>
+            <button class="btn btn-outline-success me-2" onclick="filterByCategory('loan')">Loans</button>
+            <button class="btn btn-outline-success" onclick="filterByCategory('training')">Training</button>
+        </div>
+
+        <!-- Schemes Grid -->
+        <div class="row g-4" id="schemesContainer">
+            <!-- PM-KISAN -->
+            <div class="col-md-6 col-lg-4 scheme-item" data-category="subsidy">
+                <div class="card scheme-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="scheme-icon bg-success text-white">
+                                <i class="fas fa-hand-holding-usd"></i>
+                            </div>
+                            <span class="badge bg-success status-badge">Active</span>
+                        </div>
+                        <h5>PM-KISAN</h5>
+                        <p class="text-muted small">Pradhan Mantri Kisan Samman Nidhi - Direct income support of Rs. 6000/year to farmer families.</p>
+                        <ul class="list-unstyled small text-muted mb-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Rs. 6000/year</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Direct bank transfer</li>
+                            <li><i class="fas fa-check text-success me-2"></i>3 installments</li>
+                        </ul>
+                        <button class="btn btn-success w-100" onclick="applyScheme('PM-KISAN')">
+                            <i class="fas fa-file-signature me-1"></i>Apply Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PMFBY -->
+            <div class="col-md-6 col-lg-4 scheme-item" data-category="insurance">
+                <div class="card scheme-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="scheme-icon bg-warning text-white">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <span class="badge bg-success status-badge">Active</span>
+                        </div>
+                        <h5>PMFBY</h5>
+                        <p class="text-muted small">Pradhan Mantri Fasal Bima Yojana - Crop insurance scheme to protect farmers against crop loss.</p>
+                        <ul class="list-unstyled small text-muted mb-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Low premium 2%</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Full sum insured</li>
+                            <li><i class="fas fa-check text-success me-2"></i>All crops covered</li>
+                        </ul>
+                        <button class="btn btn-success w-100" onclick="applyScheme('PMFBY')">
+                            <i class="fas fa-file-signature me-1"></i>Apply Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kisan Credit Card -->
+            <div class="col-md-6 col-lg-4 scheme-item" data-category="loan">
+                <div class="card scheme-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="scheme-icon bg-info text-white">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <span class="badge bg-success status-badge">Active</span>
+                        </div>
+                        <h5>Kisan Credit Card</h5>
+                        <p class="text-muted small">Easy credit for farmers at low interest rates for agricultural needs.</p>
+                        <ul class="list-unstyled small text-muted mb-3">
+                            <li><i class="fas fa-check text-success me-2"></i>4% interest rate</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Up to Rs. 3 lakh</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Flexible repayment</li>
+                        </ul>
+                        <button class="btn btn-success w-100" onclick="applyScheme('KCC')">
+                            <i class="fas fa-file-signature me-1"></i>Apply Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Soil Health Card -->
+            <div class="col-md-6 col-lg-4 scheme-item" data-category="subsidy">
+                <div class="card scheme-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="scheme-icon bg-secondary text-white">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <span class="badge bg-success status-badge">Active</span>
+                        </div>
+                        <h5>Soil Health Card</h5>
+                        <p class="text-muted small">Free soil testing and cards showing nutrient levels for better crop planning.</p>
+                        <ul class="list-unstyled small text-muted mb-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Free testing</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Nutrient advice</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Online access</li>
+                        </ul>
+                        <button class="btn btn-success w-100" onclick="applyScheme('Soil Health Card')">
+                            <i class="fas fa-file-signature me-1"></i>Apply Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Solar Pump Scheme -->
+            <div class="col-md-6 col-lg-4 scheme-item" data-category="subsidy">
+                <div class="card scheme-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="scheme-icon bg-primary text-white">
+                                <i class="fas fa-solar-panel"></i>
+                            </div>
+                            <span class="badge bg-warning status-badge">Limited</span>
+                        </div>
+                        <h5>Solar Pump Scheme</h5>
+                        <p class="text-muted small">Subsidy on solar-powered pumps for irrigation.</p>
+                        <ul class="list-unstyled small text-muted mb-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Up to 90% subsidy</li>
+                            <li><i class="fas fa-check text-success me-2"></i>5HP to 10HP</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Free installation</li>
+                        </ul>
+                        <button class="btn btn-success w-100" onclick="applyScheme('Solar Pump')">
+                            <i class="fas fa-file-signature me-1"></i>Apply Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Farm Mechanization -->
+            <div class="col-md-6 col-lg-4 scheme-item" data-category="subsidy">
+                <div class="card scheme-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="scheme-icon bg-dark text-white">
+                                <i class="fas fa-tractor"></i>
+                            </div>
+                            <span class="badge bg-success status-badge">Active</span>
+                        </div>
+                        <h5>Farm Mechanization</h5>
+                        <p class="text-muted small">Subsidy on agricultural machinery and equipment.</p>
+                        <ul class="list-unstyled small text-muted mb-3">
+                            <li><i class="fas fa-check text-success me-2"></i>40-80% subsidy</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Tractors, harvesters</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Easy financing</li>
+                        </ul>
+                        <button class="btn btn-success w-100" onclick="applyScheme('Farm Mechanization')">
+                            <i class="fas fa-file-signature me-1"></i>Apply Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agricultural Training -->
+            <div class="col-md-6 col-lg-4 scheme-item" data-category="training">
+                <div class="card scheme-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="scheme-icon bg-purple text-white" style="background: #6f42c1;">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <span class="badge bg-success status-badge">Active</span>
+                        </div>
+                        <h5>Farmer Training Program</h5>
+                        <p class="text-muted small">Free training on modern agricultural techniques.</p>
+                        <ul class="list-unstyled small text-muted mb-3">
+                            <li><i class="fas fa-check text-success me-2"></i>Free courses</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Certificate</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Online & offline</li>
+                        </ul>
+                        <button class="btn btn-success w-100" onclick="applyScheme('Training')">
+                            <i class="fas fa-file-signature me-1"></i>Register
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Micro Irrigation -->
+            <div class="col-md-6 col-lg-4 scheme-item" data-category="subsidy">
+                <div class="card scheme-card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="scheme-icon bg-teal text-white" style="background: #20c997;">
+                                <i class="fas fa-water"></i>
+                            </div>
+                            <span class="badge bg-success status-badge">Active</span>
+                        </div>
+                        <h5>Micro Irrigation</h5>
+                        <p class="text-muted small">Subsidy on drip irrigation and sprinkler systems.</p>
+                        <ul class="list-unstyled small text-muted mb-3">
+                            <li><i class="fas fa-check text-success me-2"></i>60-70% subsidy</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Water saving</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Increased yield</li>
+                        </ul>
+                        <button class="btn btn-success w-100" onclick="applyScheme('Micro Irrigation')">
+                            <i class="fas fa-file-signature me-1"></i>Apply Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Modal -->
+        <div class="modal fade" id="applyModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title">Apply for Scheme</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="schemeName"></p>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            You can apply through online portal or visit your nearest booth for assistance.
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" onclick="submitApplication('online')">
+                                <i class="fas fa-globe me-2"></i>Apply Online
+                            </button>
+                            <button class="btn btn-outline-success" onclick="submitApplication('booth')">
+                                <i class="fas fa-store me-2"></i>Get Help at Booth
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function applyScheme(schemeName) {
+            document.getElementById('schemeName').textContent = 'Scheme: ' + schemeName;
+            new bootstrap.Modal(document.getElementById('applyModal')).show();
+        }
+
+        function submitApplication(type) {
+            if (type === 'online') {
+                alert('Redirecting to government portal...');
+            } else {
+                alert('Visit your nearest BetterSolve Booth with required documents.');
+            }
+        }
+
+        function filterByCategory(category) {
+            const items = document.querySelectorAll('.scheme-item');
+            const buttons = document.querySelectorAll('.btn-outline-success');
+            
+            buttons.forEach(btn => btn.classList.remove('active', 'btn-success'));
+            event.target.classList.add('active', 'btn-success');
+
+            items.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function filterSchemes() {
+            const search = document.getElementById('schemeSearch').value.toLowerCase();
+            const items = document.querySelectorAll('.scheme-item');
+            
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(search) ? 'block' : 'none';
+            });
+        }
+
+        function logout() {
+            sessionStorage.clear();
+        }
+    </script>
+</body>
+</html>

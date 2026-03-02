@@ -1366,3 +1366,9 @@ function getBotResponse(message) {
         return 'I understand you need help with "' + message + '". Please visit the Help page for more information or call our toll-free number.';
     }
 }
+function handleLogin(event) {
+    event.preventDefault();
+
+    // after successful login
+    window.location.href = "dashboard.html";
+}

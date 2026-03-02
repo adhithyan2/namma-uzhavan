@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Namma Uzhavan - Smart Farmers Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --secondary: #6366f1;
+            --accent: #f59e0b;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.75);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0a0a0a;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* ================================
+           HERO SECTION
+        =============================== */
+        .hero {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            min-height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Video Background */
+        .video-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .video-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1);
+            animation: videoZoom 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes videoZoom {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        /* Dark Gradient Overlay */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                135deg,
+                rgba(0, 0, 0, 0.85) 0%,
+                rgba(0, 0, 0, 0.6) 50%,
+                rgba(0, 0, 0, 0.4) 100%
+            );
+            z-index: 1;
+        }
+
+        /* Additional gradient for depth */
+        .overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                ellipse at 30% 20%,
+                rgba(16, 185, 129, 0.15) 0%,
+                transparent 50%
+            );
+        }
+
+        .overlay::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                ellipse at 70% 80%,
+                rgba(99, 102, 241, 0.1) 0%,
+                transparent 50%
+            );
+        }
+
+        /* ================================
+           CONTENT
+        =============================== */
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 0 20px;
+            max-width: 900px;
+        }
+
+        /* Glass Card Container */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 60px 80px;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 1s ease forwards;
+            animation-delay: 0.3s;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Logo */
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards;
+            animation-delay: 0.1s;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: -0.5px;
+            color: #fff;
+        }
+
+        .nav-logo-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .nav-logo-text span {
+            color: #10b981;
+        }
+
+        /* Headline */
+        .headline {
+            font-size: 4rem;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            line-height: 1.1;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideUp 0.8s ease forwards;
+            animation-delay: 0.5s;
+        }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .headline span {
+            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .headline .highlight {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Subheadline */
+        .subheadline {
+            font-size: 1.35rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideUp 0.8s ease forwards;
+            animation-delay: 0.7s;
+        }
+
+        /* Buttons */
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideUp 0.8s ease forwards;
+            animation-delay: 0.9s;
+        }
+
+        .btn-primary-custom {
+            padding: 16px 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary-custom:hover::before {
+            left: 100%;
+        }
+
+        .btn-explore {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-explore:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-secondary-custom {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -: blur(10px);
+            borderwebkit-backdrop-filter: 1px solid var(--glass-border);
+            color: white;
+            padding: 16px 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-secondary-custom:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+        }
+
+        /* ================================
+           FEATURES TAGS
+        =============================== */
+        .features {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideUp 0.8s ease forwards;
+            animation-delay: 1.1s;
+        }
+
+        .feature-tag {
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 30px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-tag:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .feature-tag i {
+            color: var(--primary);
+            font-size: 0.75rem;
+        }
+
+        /* ================================
+           SCROLL INDICATOR
+        =============================== */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards;
+            animation-delay: 1.5s;
+        }
+
+        .scroll-mouse {
+            width: 26px;
+            height: 42px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            position: relative;
+        }
+
+        .scroll-wheel {
+            width: 4px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 2px;
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: scroll 2s ease-in-out infinite;
+        }
+
+        @keyframes scroll {
+            0%, 100% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                opacity: 0.3;
+                transform: translateX(-50%) translateY(12px);
+            }
+        }
+
+        .scroll-text {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* ================================
+           NAVIGATION
+        =============================== */
+        .nav-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        .nav-header.scrolled {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            padding: 15px 40px;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .nav-logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .nav-logo-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .language-selector {
+            position: relative;
+        }
+
+        .lang-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 8px 0;
+            min-width: 160px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .language-selector:hover .lang-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .lang-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .lang-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .lang-option.active {
+            color: var(--primary);
+        }
+
+        .lang-option .lang-flag {
+            font-size: 1.1rem;
+        }
+
+        .lang-option .lang-name {
+            font-size: 0.85rem;
+        }
+
+        .nav-btn {
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .nav-btn-outline {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .nav-btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+        }
+
+        .nav-btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            color: white;
+        }
+
+        .nav-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* ================================
+           RESPONSIVE
+        =============================== */
+        @media (max-width: 1024px) {
+            .headline {
+                font-size: 3rem;
+            }
+            
+            .glass-card {
+                padding: 50px 60px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-header {
+                padding: 15px 20px;
+            }
+            
+            .nav-links, .nav-actions {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .headline {
+                font-size: 2.2rem;
+                letter-spacing: -1px;
+            }
+            
+            .subheadline {
+                font-size: 1.1rem;
+            }
+            
+            .glass-card {
+                padding: 40px 30px;
+                border-radius: 20px;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn-primary-custom, .btn-secondary-custom {
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
+            
+            .features {
+                gap: 8px;
+            }
+            
+            .feature-tag {
+                padding: 6px 14px;
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .headline {
+                font-size: 1.8rem;
+            }
+            
+            .logo-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+            
+            .logo-text {
+                font-size: 22px;
+            }
+        }
+
+        /* ================================
+           PRELOADER
+        =============================== */
+        .preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .preloader-content {
+            text-align: center;
+        }
+
+        .preloader-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 20px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .preloader-text {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <!-- Preloader -->
+    <div class="preloader" id="preloader">
+        <div class="preloader-content">
+            <div class="preloader-logo">
+                <i class="fas fa-leaf"></i>
+            </div>
+            <div class="preloader-text">முகப்பு...</div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav-header" id="navHeader">
+        <a href="#" class="nav-logo">
+            <div class="nav-logo-icon">
+                <i class="fas fa-leaf"></i>
+            </div>
+            <span class="nav-logo-text">Namma <span>Uzhavan</span></span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#features">அம்சங்கள்</a></li>
+            <li><a href="#about">பற்றி</a></li>
+            <li><a href="#services">சேவைகள்</a></li>
+            <li><a href="#contact">தொடர்பு</a></li>
+        </ul>
+        <div class="nav-actions">
+            <div class="language-selector">
+                <button class="lang-btn">
+                    <i class="fas fa-globe"></i>
+                    <span id="currentLang">EN</span>
+                    <i class="fas fa-chevron-down" style="font-size: 0.7rem;"></i>
+                </button>
+                <div class="lang-dropdown">
+                    <a class="lang-option active" href="javascript:changeLanguage('en')">
+                        <span class="lang-flag">🇬🇧</span>
+                        <span class="lang-name">English</span>
+                    </a>
+                    <a class="lang-option" href="javascript:changeLanguage('ta')">
+                        <span class="lang-flag">🇮🇳</span>
+                        <span class="lang-name">தமிழ்</span>
+                    </a>
+                    <a class="lang-option" href="javascript:changeLanguage('hi')">
+                        <span class="lang-flag">🇮🇳</span>
+                        <span class="lang-name">हिन्दी</span>
+                    </a>
+                    <a class="lang-option" href="javascript:changeLanguage('te')">
+                        <span class="lang-flag">🇮🇳</span>
+                        <span class="lang-name">తెలుగు</span>
+                    </a>
+                    <a class="lang-option" href="javascript:changeLanguage('kn')">
+                        <span class="lang-flag">🇮🇳</span>
+                        <span class="lang-name">ಕನ್ನಡ</span>
+                    </a>
+                    <a class="lang-option" href="javascript:changeLanguage('ml')">
+                        <span class="lang-flag">🇮🇳</span>
+                        <span class="lang-name">മലയാളം</span>
+                    </a>
+                </div>
+            </div>
+            <a href="index.html" class="nav-btn nav-btn-outline">Agent Login</a>
+            <a href="index.html" class="nav-btn nav-btn-primary">Farmer Login</a>
+        </div>
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero">
+        <!-- Video Background -->
+        <div class="video-container">
+            <video class="video-bg" autoplay muted loop playsinline poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1920' height='1080'%3E%3Crect fill='%230a0a0a'/%3E%3C/svg%3E">
+                <source src="videos/scale-1.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+
+        <!-- Overlay -->
+        <div class="overlay"></div>
+
+        <!-- Content -->
+        <div class="hero-content">
+            <div class="glass-card">
+                <!-- Logo -->
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <span class="logo-text">Namma Uzhavan</span>
+                </div>
+
+                <!-- Headline -->
+                <h1 class="headline">
+                    <span>Welcome to</span><br>
+                    <span class="highlight">Namma Uzhavan</span><br>
+                    <span>Portal</span>
+                </h1>
+
+                <!-- Subheadline -->
+                <p class="subheadline">
+                    Connecting farmers with government schemes, weather predictions,<br>
+                    crop advice, and market information through technology.
+                </p>
+
+                <!-- Buttons -->
+                <div class="hero-buttons">
+                    <a href="index.html" class="btn-primary-custom btn-explore">
+                        <i class="fas fa-compass"></i>
+                        உலவு
+                    </a>
+                    <a href="index.html" class="btn-secondary-custom">
+                        <i class="fas fa-sign-in-alt"></i>
+                        தொடங்கு
+                    </a>
+                </div>
+
+                <!-- Features Tags -->
+                <div class="features">
+                    <div class="feature-tag">
+                        <i class="fas fa-check-circle"></i>
+                        GPS Location
+                    </div>
+                    <div class="feature-tag">
+                        <i class="fas fa-check-circle"></i>
+                        Weather AI
+                    </div>
+                    <div class="feature-tag">
+                        <i class="fas fa-check-circle"></i>
+                        Crop Advisory
+                    </div>
+                    <div class="feature-tag">
+                        <i class="fas fa-check-circle"></i>
+                        Schemes
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator">
+            <div class="scroll-mouse">
+                <div class="scroll-wheel"></div>
+            </div>
+            <div class="scroll-text">சுருக்கு</div>
+        </div>
+    </section>
+
+    <!-- JavaScript -->
+    <script>
+        // Wait for page to load
+        window.addEventListener('load', function() {
+            // Hide preloader
+            setTimeout(function() {
+                document.getElementById('preloader').classList.add('hidden');
+            }, 1500);
+        });
+
+        // Navigation scroll effect
+        window.addEventListener('scroll', function() {
+            const navHeader = document.getElementById('navHeader');
+            if (window.scrollY > 50) {
+                navHeader.classList.add('scrolled');
+            } else {
+                navHeader.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Mobile menu toggle (placeholder function)
+        function toggleMobileMenu() {
+            alert('Mobile menu would open here');
+        }
+
+        // Parallax effect on scroll
+        window.addEventListener('scroll', function() {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.hero');
+            const video = document.querySelector('.video-bg');
+            
+            if (video) {
+                video.style.transform = `scale(1.1) translateY(${scrolled * 0.3}px)`;
+            }
+        });
+
+        // Add entrance animation for elements when they come into view
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements (if needed for additional sections)
+        document.querySelectorAll('.animate-on-scroll').forEach(el => {
+            observer.observe(el);
+        });
+
+        // ================================
+        // LANGUAGE SYSTEM
+        // ================================
+        const langNames = { en: 'EN', ta: 'TA', hi: 'HI', te: 'TE', kn: 'KN', ml: 'ML' };
+        
+        const translations = {
+            en: {
+                welcome: "Welcome to",
+                headline: "Namma Uzhavan",
+                portal: "Portal",
+                subheadline: "Connecting farmers with government schemes, weather predictions, crop advice, and market information through technology.",
+                explore: "Explore More",
+                getStarted: "Get Started",
+                features: "Features",
+                about: "About",
+                services: "Services",
+                contact: "Contact",
+                agentLogin: "Agent Login",
+                farmerLogin: "Farmer Login",
+                gps: "GPS Location",
+                weather: "Weather AI",
+                crop: "Crop Advisory",
+                schemes: "Schemes",
+                scroll: "Scroll"
+            },
+            ta: {
+                welcome: "வரவேற்கிறோம்",
+                headline: "நம்ம உழவன்",
+                portal: "போர்டல்",
+                subheadline: "விவசாயிகளை அரசு திட்டங்கள், வான் முன்னறிவிப்பு, பயிர் ஆலோசனை மற்றும் சந்தை தகவல்களுடன் தொழில் நுட்பம் மூலம் இணைக்கிறோம்.",
+                explore: "உலவு",
+                getStarted: "தொடங்கு",
+                features: "அம்சங்கள்",
+                about: "பற்றி",
+                services: "சேவைகள்",
+                contact: "தொடர்பு",
+                agentLogin: "ஏஜெண்ட் உள்நுழை",
+                farmerLogin: "விவசாயி உள்நுழை",
+                gps: "GPS இடம்",
+                weather: "வான் AI",
+                crop: "பயிர் ஆலோசனை",
+                schemes: "திட்டங்கள்",
+                scroll: "சுருக்கு"
+            },
+            hi: {
+                welcome: "स्वागत है",
+                headline: "नम्मा उजवन",
+                portal: "पोर्टल",
+                subheadline: "किसानों को सरकारी योजनाओं, मौसम पूर्वानुमान, फसल सलाह और बाजार की जानकारी से जोड़ना।",
+                explore: "अन्वेषण",
+                getStarted: "शुरू करें",
+                features: "विशेषताएं",
+                about: "के बारे में",
+                services: "सेवाएं",
+                contact: "संपर्क",
+                agentLogin: "एजेंट लॉगिन",
+                farmerLogin: "किसान लॉगिन",
+                gps: "GPS स्थान",
+                weather: "मौसम AI",
+                crop: "फसल सलाह",
+                schemes: "योजनाएं",
+                scroll: "नीचे"
+            },
+            te: {
+                welcome: "స్వాగతం",
+                headline: "నమ్మ ఉజహత్",
+                portal: "पोर्टल",
+                subheadline: "రైతులను ప్రభుత్వ scheme లు, వాతావరణ prediction, crop advice, market informationతో Technology ద్వారా Connect చేయటం.",
+                explore: "Explore",
+                getStarted: "Start",
+                features: "Features",
+                about: "About",
+                services: "Services",
+                contact: "Contact",
+                agentLogin: "Agent Login",
+                farmerLogin: "Farmer Login",
+                gps: "GPS Location",
+                weather: "Weather AI",
+                crop: "Crop Advisory",
+                schemes: "Schemes",
+                scroll: "Scroll"
+            },
+            kn: {
+                welcome: "ಸ್ವಾಗತ",
+                headline: "ನಮ್ಮ ಉಜವಂ",
+                portal: "ಪೋರ್ಟಲ್",
+                subheadline: "ರೈತರನ್ನು ಸರ್ಕಾರಿ ಯೋಜನೆಗಳು, ಹವಾಮಾನ ಮುನ್ಸೂಚನೆ, ಬೆಳೆ ಸಲಹೆ ಮತ್ತು ಮಾರುಕಟ್ಟೆ ಮಾಹಿತಿಗಳೊಂದಿಗೆ ತಂತ್ರಜ್ಞಾನದ ಮೂಲಕ ಸಂಪರ್ಕಿಸುವುದು.",
+                explore: "ಅನ್ವೇಷಿಸಿ",
+                getStarted: "ಪ್ರಾರಂಭಿಸಿ",
+                features: "ವೈಶಿಷ್ಟ್ಯಗಳು",
+                about: "ಬಗ್ಗೆ",
+                services: "ಸೇವೆಗಳು",
+                contact: "ಸಂಪರ್ಕ",
+                agentLogin: "Agent Login",
+                farmerLogin: "Farmer Login",
+                gps: "GPS ಸ್ಥಳ",
+                weather: "Weather AI",
+                crop: "Crop Advisory",
+                schemes: "Schemes",
+                scroll: "Scroll"
+            },
+            ml: {
+                welcome: "സ്വാഗതം",
+                headline: "നമ്മ ഉഴവൻ",
+                portal: "പോര്‍ട്ടല്‍",
+                subheadline: "കര്‍ഷകരെ സര്‍ക്കാര്‍ പദ്ധതികള്‍, കാലാവസ്ഥ പ്രവചനം, കൃഷി ഉപദേശം, മാര്‍ക്കറ്റ് വിവരങ്ങള്‍ എന്നിവയുമായി ടെക്‌നോളജി വഴി ബന്ധിപ്പിക്കുക.",
+                explore: "പര്യവേക്ഷണം",
+                getStarted: "ആരംഭിക്കുക",
+                features: "സവിശേഷതകള്‍",
+                about: "വിവരം",
+                services: "സേവനങ്ങള്‍",
+                contact: "ബന്ധപ്പെടുക",
+                agentLogin: "Agent Login",
+                farmerLogin: "Farmer Login",
+                gps: "GPS സ്ഥാനം",
+                weather: "Weather AI",
+                crop: "Crop Advisory",
+                schemes: "Schemes",
+                scroll: "Scroll"
+            }
+        };
+
+        // Initialize language on page load
+        function initLanguage() {
+            const savedLang = localStorage.getItem('nammaUzhavanLang');
+            if (savedLang && translations[savedLang]) {
+                applyLanguage(savedLang);
+            } else {
+                const browserLang = navigator.language.split('-')[0];
+                if (translations[browserLang]) {
+                    applyLanguage(browserLang);
+                } else {
+                    applyLanguage('en');
+                }
+            }
+        }
+
+        // Change language
+        function changeLanguage(lang) {
+            if (translations[lang]) {
+                localStorage.setItem('nammaUzhavanLang', lang);
+                applyLanguage(lang);
+            }
+        }
+
+        // Apply language to page
+        function applyLanguage(lang) {
+            const t = translations[lang];
+            if (!t) return;
+
+            // Update current lang display
+            document.getElementById('currentLang').textContent = langNames[lang];
+
+            // Update all translatable elements
+            const welcomeEl = document.querySelector('.headline span:first-child');
+            const headlineEl = document.querySelector('.headline .highlight');
+            const portalEl = document.querySelector('.headline span:last-child');
+            const subheadlineEl = document.querySelector('.subheadline');
+            const exploreBtn = document.querySelector('.btn-explore');
+            const getStartedBtn = document.querySelector('.btn-secondary-custom');
+            const scrollText = document.querySelector('.scroll-text');
+            const features = document.querySelectorAll('.feature-tag');
+
+            if (welcomeEl) welcomeEl.textContent = t.welcome;
+            if (headlineEl) headlineEl.textContent = t.headline;
+            if (portalEl) portalEl.textContent = t.portal;
+            if (subheadlineEl) subheadlineEl.innerHTML = t.subheadline.replace(/,/g, '<br>');
+            if (exploreBtn) exploreBtn.innerHTML = `<i class="fas fa-compass"></i> ${t.explore}`;
+            if (getStartedBtn) getStartedBtn.innerHTML = `<i class="fas fa-sign-in-alt"></i> ${t.getStarted}`;
+            if (scrollText) scrollText.textContent = t.scroll;
+
+            // Update nav links
+            const navLinks = document.querySelectorAll('.nav-links a');
+            if (navLinks[0]) navLinks[0].textContent = t.features;
+            if (navLinks[1]) navLinks[1].textContent = t.about;
+            if (navLinks[2]) navLinks[2].textContent = t.services;
+            if (navLinks[3]) navLinks[3].textContent = t.contact;
+
+            // Update login buttons
+            const loginBtns = document.querySelectorAll('.nav-btn');
+            if (loginBtns[0]) loginBtns[0].textContent = t.agentLogin;
+            if (loginBtns[1]) loginBtns[1].textContent = t.farmerLogin;
+
+            // Update feature tags
+            if (features[0]) features[0].innerHTML = `<i class="fas fa-check-circle"></i> ${t.gps}`;
+            if (features[1]) features[1].innerHTML = `<i class="fas fa-check-circle"></i> ${t.weather}`;
+            if (features[2]) features[2].innerHTML = `<i class="fas fa-check-circle"></i> ${t.crop}`;
+            if (features[3]) features[3].innerHTML = `<i class="fas fa-check-circle"></i> ${t.schemes}`;
+
+            // Update active class on dropdown
+            document.querySelectorAll('.lang-option').forEach(opt => {
+                opt.classList.remove('active');
+                if (opt.href.includes(`'${lang}'`)) {
+                    opt.classList.add('active');
+                }
+            });
+
+            // Store for other pages
+            localStorage.setItem('selectedLanguage', lang);
+            localStorage.setItem('smartFarmersLang', lang);
+        }
+
+        // Initialize language on page load
+        initLanguage();
+    </script>
+</body>
+</html>

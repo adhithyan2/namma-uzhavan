@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Recommendation - Smart Farmers Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary-green: #1b5e20; --secondary-green: #2e7d32; --light-green: #4caf50; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f9f5; }
+        .sidebar { min-height: 100vh; background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+        .sidebar .nav-link { color: #333; padding: 12px 20px; border-radius: 8px; margin: 4px 0; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background: var(--light-green); color: white; }
+        .crop-card { border-radius: 12px; transition: all 0.3s; border: none; }
+        .crop-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .best-crop { border-left: 4px solid #28a745; background: #e8f5e9; }
+        .good-crop { border-left: 4px solid #2196f3; background: #e3f2fd; }
+        .avoid-crop { border-left: 4px solid #dc3545; background: #ffebee; }
+        .weather-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2 sidebar p-0">
+                <div class="p-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a class="nav-link" href="farmer-dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="climate-prediction.html"><i class="fas fa-cloud-sun"></i> Climate Prediction</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="crop-recommendation.html"><i class="fas fa-seedling"></i> Crop Suggestions</a></li>
+                        <li class="nav-item"><a class="nav-link" href="risk-alerts.html"><i class="fas fa-exclamation-triangle"></i> Risk Alerts</a></li>
+                        <li class="nav-item"><a class="nav-link" href="voice-assistant.html"><i class="fas fa-microphone"></i> Voice Assistant</a></li>
+                        <li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-10 p-4">
+                <h4 class="mb-4"><i class="fas fa-seedling me-2 text-success"></i>Crop Recommendations</h4>
+                
+                <!-- Weather & Location -->
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Based on Current Weather</h6>
+                            <div>
+                                <select class="form-select form-select-sm d-inline-block w-auto" id="locationSelect" onchange="loadCropRecommendations()">
+                                    <option value="Chittoor">Chittoor</option>
+                                    <option value="Kallur">Kallur</option>
+                                    <option value="Delhi">Delhi</option>
+                                    <option value="Hyderabad">Hyderabad</option>
+                                    <option value="Mumbai">Mumbai</option>
+                                    <option value="Bangalore">Bangalore</option>
+                                </select>
+                                <button class="btn btn-sm btn-success ms-2" onclick="detectLocation()">
+                                    <i class="fas fa-crosshairs me-1"></i>Detect
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="weatherInfo">
+                            <div class="col-md-3">
+                                <small class="text-muted">Temperature</small>
+                                <p class="fw-bold mb-0" id="currentTemp">--°C</p>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Humidity</small>
+                                <p class="fw-bold mb-0" id="currentHumidity">--%</p>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Condition</small>
+                                <p class="fw-bold mb-0" id="currentCondition">--</p>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Risk Level</small>
+                                <p class="fw-bold mb-0" id="riskLevel">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Your Profile Summary -->
+                <div class="card mb-4">
+                    <div class="card-header bg-white"><h6 class="mb-0">Your Farm Profile</h6></div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3"><small class="text-muted">Soil Type</small><p class="fw-bold mb-0">Loamy</p></div>
+                            <div class="col-md-3"><small class="text-muted">Land Size</small><p class="fw-bold mb-0">5.0 Acres</p></div>
+                            <div class="col-md-3"><small class="text-muted">Season</small><p class="fw-bold mb-0">Kharif</p></div>
+                            <div class="col-md-3"><small class="text-muted">Irrigation</small><p class="fw-bold mb-0">Canal</p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Crop Recommendations -->
+                <h5 class="mb-3"><i class="fas fa-check-circle text-success me-2"></i>Best Crops (Recommended)</h5>
+                <div class="row mb-4" id="bestCrops">
+                    <div class="col-12 text-center text-muted">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p>Loading recommendations...</p>
+                    </div>
+                </div>
+
+                <!-- Alternative Crops -->
+                <h5 class="mb-3"><i class="fas fa-star text-info me-2"></i>Alternative Crops</h5>
+                <div class="row mb-4" id="alternativeCrops">
+                    <div class="col-12 text-center text-muted">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p>Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Crops to Avoid -->
+                <h5 class="mb-3"><i class="fas fa-times-circle text-danger me-2"></i>Crops to Avoid</h5>
+                <div class="row" id="avoidCrops">
+                    <div class="col-12 text-center text-muted">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p>Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Money Saving Tips -->
+                <div class="card mt-4" id="moneySavingCard" style="display:none;">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="fas fa-rupee-sign me-2"></i>Money Saving Tips</h6>
+                    </div>
+                    <div class="card-body" id="moneySavingTips"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentWeather = null;
+
+        async function loadCropRecommendations() {
+            const location = document.getElementById('locationSelect').value;
+            
+            try {
+                // Get weather data
+                const weatherRes = await fetch(`http://localhost:5000/api/weather?location=${location}`);
+                currentWeather = await weatherRes.json();
+                
+                // Update weather display
+                document.getElementById('currentTemp').textContent = Math.round(currentWeather.temperature) + '°C';
+                document.getElementById('currentHumidity').textContent = currentWeather.humidity + '%';
+                document.getElementById('currentCondition').textContent = currentWeather.weatherCondition;
+                
+                // Get crop suggestions
+                const cropRes = await fetch(`http://localhost:5000/api/crop-suggestion?temperature=${currentWeather.temperature}&rainfall=${currentWeather.humidity}&soilType=Loamy&location=${location}`);
+                const cropData = await cropRes.json();
+                
+                // Update risk level
+                document.getElementById('riskLevel').textContent = cropData.riskLevel || 'Low';
+                
+                // Render crops
+                renderCropRecommendations(cropData);
+                
+                // Show money saving tips
+                if (cropData.moneySavingSummary) {
+                    document.getElementById('moneySavingCard').style.display = 'block';
+                    document.getElementById('riskLevel').textContent = cropData.riskLevel;
+                }
+                
+            } catch (error) {
+                console.error('Error loading recommendations:', error);
+            }
+        }
+
+        function renderCropRecommendations(cropData) {
+            const suggestions = cropData.suggestions || [];
+            
+            // Best crops (top 3)
+            const bestCrops = suggestions.slice(0, 3);
+            document.getElementById('bestCrops').innerHTML = bestCrops.map(crop => `
+                <div class="col-md-4">
+                    <div class="card crop-card best-crop p-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-leaf fa-2x text-success me-3"></i>
+                            <div>
+                                <h5 class="mb-0">${crop.crop}</h5>
+                                <small class="text-muted">${crop.score}% Match</small>
+                            </div>
+                        </div>
+                        <p class="mb-2">${crop.reason}</p>
+                        <div class="d-flex justify-content-between">
+                            <span class="badge bg-success">Water: ${crop.waterNeed}</span>
+                            <span class="badge bg-${crop.riskPercentage < 30 ? 'success' : crop.riskPercentage < 60 ? 'warning' : 'danger'}">Risk: ${crop.riskPercentage}%</span>
+                        </div>
+                        ${crop.profitPotential ? `
+                        <div class="mt-2">
+                            <small class="text-success"><i class="fas fa-rupee-sign"></i> ${crop.profitPotential.perAcre}/acre</small>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+            
+            // Alternative crops (4-6)
+            const altCrops = suggestions.slice(3, 6);
+            document.getElementById('alternativeCrops').innerHTML = altCrops.length > 0 ? altCrops.map(crop => `
+                <div class="col-md-6">
+                    <div class="card crop-card good-crop p-3">
+                        <h6><i class="fas fa-leaf text-info me-2"></i>${crop.crop}</h6>
+                        <p class="mb-2">${crop.reason}</p>
+                        <small class="text-muted">Match: ${crop.score}% | Risk: ${crop.riskPercentage}%</small>
+                    </div>
+                </div>
+            `).join('') : '<div class="col-12"><p class="text-muted">No alternative crops available</p></div>';
+            
+            // Avoid crops (low scoring)
+            const avoidCrops = suggestions.filter(c => c.score < 40);
+            document.getElementById('avoidCrops').innerHTML = avoidCrops.length > 0 ? avoidCrops.map(crop => `
+                <div class="col-md-6">
+                    <div class="card crop-card avoid-crop p-3">
+                        <h6><i class="fas fa-leaf text-danger me-2"></i>${crop.crop}</h6>
+                        <p class="mb-2">Not recommended due to current weather conditions (${crop.score}% match).</p>
+                        <small class="text-danger">Risk: ${crop.riskPercentage}% | Avoid</small>
+                    </div>
+                </div>
+            `).join('') : '<div class="col-12"><p class="text-muted">No crops to avoid at this time</p></div>';
+            
+            // Money saving tips
+            const allTips = [];
+            suggestions.forEach(crop => {
+                if (crop.moneySavingTip && Array.isArray(crop.moneySavingTip)) {
+                    allTips.push(...crop.moneySavingTip);
+                }
+            });
+            const uniqueTips = [...new Set(allTips)];
+            
+            if (uniqueTips.length > 0) {
+                document.getElementById('moneySavingTips').innerHTML = `
+                    <ul class="mb-0">
+                        ${uniqueTips.slice(0, 5).map(tip => `<li>${tip}</li>`).join('')}
+                    </ul>
+                    ${cropData.moneySavingSummary ? `
+                    <div class="alert alert-success mt-2 mb-0">
+                        <strong>Estimated Savings:</strong> ${cropData.moneySavingSummary.estimatedLossAvoided}
+                    </div>
+                    ` : ''}
+                `;
+            }
+        }
+
+        async function detectLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    try {
+                        const response = await fetch(`http://localhost:5000/api/weather-by-coords?lat=${lat}&lon=${lon}`);
+                        const data = await response.json();
+                        
+                        document.getElementById('locationSelect').value = data.location;
+                        loadCropRecommendations();
+                        
+                        alert(`Location detected: ${data.location}`);
+                    } catch (error) {
+                        alert('Could not get weather for your location');
+                    }
+                }, () => {
+                    alert('Could not detect location');
+                });
+            } else {
+                alert('Geolocation not supported');
+            }
+        }
+
+        // Initialize
+        loadCropRecommendations();
+    </script>
+</body>
+</html>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alternative Crops -->
+                <h5 class="mb-3"><i class="fas fa-star text-info me-2"></i>Alternative Crops</h5>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card crop-card good-crop p-3">
+                            <h6><i class="fas fa-leaf text-info me-2"></i>Cotton</h6>
+                            <p class="mb-2">Requires black soil, moderate risk. Good market demand.</p>
+                            <small class="text-warning">Risk: Medium | Profit: Variable</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card crop-card good-crop p-3">
+                            <h6><i class="fas fa-leaf text-info me-2"></i>Millets (Ragi)</h6>
+                            <p class="mb-2">Drought resistant, low water requirement. Good for dry areas.</p>
+                            <small class="text-success">Risk: Low | Profit: Medium</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Crops to Avoid -->
+                <h5 class="mb-3"><i class="fas fa-times-circle text-danger me-2"></i>Crops to Avoid</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card crop-card avoid-crop p-3">
+                            <h6><i class="fas fa-leaf text-danger me-2"></i>Sugarcane</h6>
+                            <p class="mb-2">NOT recommended due to high water requirement. Current water shortage risk.</p>
+                            <small class="text-danger">Risk: High | Avoid</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card crop-card avoid-crop p-3">
+                            <h6><i class="fas fa-leaf text-danger me-2"></i>Wheat</h6>
+                            <p class="mb-2">Rabi season crop. Not suitable for current Kharif season.</p>
+                            <small class="text-danger">Risk: High | Wrong Season</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

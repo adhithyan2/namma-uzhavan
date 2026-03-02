@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Farmer - Smart Farmers Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary-green: #1b5e20;
+            --secondary-green: #2e7d32;
+            --light-green: #4caf50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f9f5;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, var(--primary-green) 0%, #0d3d12 100%);
+            color: white;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 4px 0;
+        }
+
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        .registration-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+
+        .photo-upload {
+            width: 150px;
+            height: 150px;
+            border: 3px dashed #ccc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin: 0 auto;
+            background: #f8f9fa;
+            transition: all 0.3s;
+        }
+
+        .photo-upload:hover {
+            border-color: var(--light-green);
+            background: #e8f5e9;
+        }
+
+        .photo-upload img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .generated-id {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .generated-id h3 {
+            margin: 0;
+            font-size: 2rem;
+            letter-spacing: 2px;
+        }
+
+        .section-title {
+            border-bottom: 2px solid var(--light-green);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary-green);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Sidebar -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="text-center py-4 border-bottom border-secondary">
+                    <i class="fas fa-leaf fa-2x mb-2"></i>
+                    <h6 class="fw-bold">Booth Agent</h6>
+                    <small>ID: <span id="agentIdDisplay">AGT001</span></small>
+                </div>
+                <div class="p-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="booth-dashboard.html">
+                                <i class="fas fa-home"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="register-farmer.html">
+                                <i class="fas fa-user-plus"></i> Register Farmer
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="farmers-list.html">
+                                <i class="fas fa-users"></i> Farmers List
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="crop-monitoring.html">
+                                <i class="fas fa-chart-line"></i> Crop Monitoring
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="climate-alerts.html">
+                                <i class="fas fa-cloud-sun"></i> Climate Alerts
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="reports.html">
+                                <i class="fas fa-file-alt"></i> Reports
+                            </a>
+                        </li>
+                        <li class="nav-item mt-3">
+                            <a class="nav-link text-warning" href="index.html" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 p-4">
+                <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                        <div class="card registration-card">
+                            <div class="card-header bg-success text-white text-center py-3">
+                                <h4 class="mb-0"><i class="fas fa-user-plus me-2"></i>Farmer Registration</h4>
+                            </div>
+                            <div class="card-body p-4">
+                                <form id="registrationForm" onsubmit="registerFarmer(event)">
+                                    <!-- Photo Upload & Generated ID -->
+                                    <div class="row mb-4">
+                                        <div class="col-md-4 text-center">
+                                            <div class="photo-upload" onclick="document.getElementById('photoInput').click()">
+                                                <div id="photoPreview">
+                                                    <i class="fas fa-camera fa-2x text-muted"></i>
+                                                    <p class="mb-0 text-muted small">Upload Photo</p>
+                                                </div>
+                                            </div>
+                                            <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="previewPhoto(event)">
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="generated-id">
+                                                <small>Farmer ID (Auto Generated)</small>
+                                                <h3 id="farmerId">FRM-2024-001</h3>
+                                                <small>Registration Date: <span id="regDate"></span></small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Personal Details -->
+                                    <h5 class="section-title"><i class="fas fa-user me-2"></i>Personal Details</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Farmer Name *</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                                <input type="text" class="form-control" id="farmerName" required placeholder="Enter full name">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Age *</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-birthday-cake"></i></span>
+                                                <input type="number" class="form-control" id="farmerAge" required min="18" max="100" placeholder="Enter age">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Aadhaar Number *</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                                                <input type="text" class="form-control" id="aadhaarNo" required placeholder="XXXX XXXX XXXX" maxlength="14">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Phone Number</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                                <input type="tel" class="form-control" id="phoneNo" placeholder="10-digit mobile">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Location Details -->
+                                    <h5 class="section-title mt-4"><i class="fas fa-map-marker-alt me-2"></i>Location Details</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Village *</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-home"></i></span>
+                                                <select class="form-select" id="village" required>
+                                                    <option value="">Select Village</option>
+                                                    <option value="Kallur">Kallur</option>
+                                                    <option value="Chittoor">Chittoor</option>
+                                                    <option value="Tirupati">Tirupati</option>
+                                                    <option value="Pileru">Pileru</option>
+                                                    <option value="Madanapalle">Madanapalle</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">District *</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-building"></i></span>
+                                                <select class="form-select" id="district" required>
+                                                    <option value="">Select District</option>
+                                                    <option value="Chittoor">Chittoor</option>
+                                                    <option value="Anantapur">Anantapur</option>
+                                                    <option value="Kadapa">Kadapa</option>
+                                                    <option value="Nellore">Nellore</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Land Details -->
+                                    <h5 class="section-title mt-4"><i class="fas fa-ruler-combined me-2"></i>Land Details</h5>
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Land Size (Acres) *</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-square"></i></span>
+                                                <input type="number" class="form-control" id="landSize" required min="0.1" step="0.1" placeholder="Total acres">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Soil Type *</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-layer-group"></i></span>
+                                                <select class="form-select" id="soilType" required>
+                                                    <option value="">Select Soil Type</option>
+                                                    <option value="Loamy">Loamy</option>
+                                                    <option value="Sandy">Sandy</option>
+                                                    <option value="Clay">Clay</option>
+                                                    <option value="Silty">Silty</option>
+                                                    <option value="Red Soil">Red Soil</option>
+                                                    <option value="Black Soil">Black Soil</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label class="form-label">Irrigation Type *</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-tint"></i></span>
+                                                <select class="form-select" id="irrigationType" required>
+                                                    <option value="">Select Irrigation</option>
+                                                    <option value="Rain-fed">Rain-fed</option>
+                                                    <option value="Canal">Canal</option>
+                                                    <option value="Drip">Drip Irrigation</option>
+                                                    <option value="Sprinkler">Sprinkler</option>
+                                                    <option value="Tubewell">Tubewell</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Current Crop -->
+                                    <h5 class="section-title mt-4"><i class="fas fa-seedling me-2"></i>Crop Details</h5>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Current Crop *</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-leaf"></i></span>
+                                                <select class="form-select" id="currentCrop" required>
+                                                    <option value="">Select Crop</option>
+                                                    <option value="Paddy">Paddy</option>
+                                                    <option value="Groundnut">Groundnut</option>
+                                                    <option value="Cotton">Cotton</option>
+                                                    <option value="Maize">Maize</option>
+                                                    <option value="Sugarcane">Sugarcane</option>
+                                                    <option value="Wheat">Wheat</option>
+                                                    <option value="Millets">Millets</option>
+                                                    <option value="Vegetables">Vegetables</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Season</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+                                                <select class="form-select" id="season">
+                                                    <option value="Kharif">Kharif (Monsoon)</option>
+                                                    <option value="Rabi">Rabi (Winter)</option>
+                                                    <option value="Zaid">Zaid (Summer)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit Buttons -->
+                                    <div class="row mt-4">
+                                        <div class="col-md-6">
+                                            <button type="button" class="btn btn-outline-secondary w-100" onclick="resetForm()">
+                                                <i class="fas fa-redo me-2"></i>Reset Form
+                                            </button>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button type="submit" class="btn btn-success w-100 fw-bold">
+                                                <span class="spinner-border spinner-border-sm d-none me-2" id="submitSpinner"></span>
+                                                <i class="fas fa-save me-2"></i>Register Farmer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Set registration date and generate ID
+        document.getElementById('regDate').textContent = new Date().toLocaleDateString();
+        
+        function generateFarmerId() {
+            const year = new Date().getFullYear();
+            const random = Math.floor(100 + Math.random() * 900);
+            return `FRM-${year}-${random}`;
+        }
+        
+        document.getElementById('farmerId').textContent = generateFarmerId();
+
+        function previewPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('photoPreview').innerHTML = 
+                        `<img src="${e.target.result}" alt="Farmer Photo">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function registerFarmer(event) {
+            event.preventDefault();
+            
+            const spinner = document.getElementById('submitSpinner');
+            spinner.classList.remove('d-none');
+            
+            const farmerData = {
+                farmerName: document.getElementById('farmerName').value,
+                age: document.getElementById('farmerAge').value,
+                aadhaarNo: document.getElementById('aadhaarNo').value,
+                phoneNo: document.getElementById('phoneNo').value,
+                village: document.getElementById('village').value,
+                district: document.getElementById('district').value,
+                landSize: document.getElementById('landSize').value,
+                soilType: document.getElementById('soilType').value,
+                irrigationType: document.getElementById('irrigationType').value,
+                currentCrop: document.getElementById('currentCrop').value,
+                season: document.getElementById('season').value
+            };
+            
+            // Save to backend
+            fetch('http://localhost:5000/api/register-farmer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(farmerData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(`Farmer Registered Successfully!\n\nFarmer ID: ${data.farmer.id}\nName: ${data.farmer.farmerName}\nVillage: ${data.farmer.village}\n\nSave this Farmer ID for future reference.`);
+                resetForm();
+                document.getElementById('farmerId').textContent = generateFarmerId();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Fallback to local storage if backend fails
+                let localFarmers = JSON.parse(localStorage.getItem('farmers') || '[]');
+                farmerData.id = document.getElementById('farmerId').textContent;
+                farmerData.registeredDate = new Date().toISOString();
+                farmerData.riskLevel = 'Low';
+                localFarmers.push(farmerData);
+                localStorage.setItem('farmers', JSON.stringify(localFarmers));
+                
+                alert(`Farmer Registered Successfully!\n\nFarmer ID: ${farmerData.id}\nName: ${farmerData.farmerName}\nVillage: ${farmerData.village}\n\nSave this Farmer ID for future reference.`);
+                resetForm();
+                document.getElementById('farmerId').textContent = generateFarmerId();
+            })
+            .finally(() => {
+                spinner.classList.add('d-none');
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('registrationForm').reset();
+            document.getElementById('photoPreview').innerHTML = 
+                '<div><i class="fas fa-camera fa-2x text-muted"></i><p class="mb-0 text-muted small">Upload Photo</p></div>';
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

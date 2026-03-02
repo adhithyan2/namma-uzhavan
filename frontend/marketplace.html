@@ -3,145 +3,461 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marketplace - Crop Strategy Engine</title>
+    <title>Marketplace - Smart Farmers Portal</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary-green: #1B5E20; --secondary-green: #2E7D32; --light-green: #4CAF50; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #f5f5f5; }
+        
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 260px; background: linear-gradient(180deg, var(--primary-green), #0D3D12); z-index: 1000; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); color: white; display: flex; align-items: center; gap: 12px; }
+        .logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .sidebar-menu { padding: 15px; }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: rgba(255,255,255,0.8); text-decoration: none; border-radius: 10px; margin-bottom: 5px; cursor: pointer; }
+        .menu-item:hover { background: rgba(255,255,255,0.15); color: white; }
+        .menu-item.active { background: rgba(255,255,255,0.25); color: white; }
+        
+        .main-content { margin-left: 260px; padding: 20px; }
+        
+        .header { background: white; padding: 15px 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header-title { font-size: 24px; font-weight: 600; color: #333; }
+        
+        .card { background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; overflow: hidden; }
+        .card-header { padding: 15px 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 16px; font-weight: 600; }
+        .card-body { padding: 20px; }
+        
+        .tab-buttons { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { padding: 12px 25px; border: none; border-radius: 10px; cursor: pointer; font-weight: 500; }
+        .tab-btn.active { background: var(--primary-green); color: white; }
+        .tab-btn:not(.active) { background: white; color: #333; }
+        
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .product-card { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .product-img { width: 100%; height: 120px; display: flex; align-items: center; justify-content: center; font-size: 60px; background: #f8f9fa; border-radius: 10px; margin-bottom: 10px; }
+        .product-name { font-weight: 600; margin-bottom: 5px; }
+        .product-price { font-size: 20px; font-weight: 700; color: var(--primary-green); }
+        .product-original { text-decoration: line-through; color: #999; font-size: 14px; }
+        
+        .price-compare { background: #f8f9fa; padding: 10px; border-radius: 8px; margin: 10px 0; }
+        .compare-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e0e0e0; }
+        
+        .sell-form { max-width: 600px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { font-weight: 500; margin-bottom: 5px; display: block; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; }
+        
+        .waste-calculator { background: linear-gradient(135deg, #ff9800, #f57c00); color: white; padding: 20px; border-radius: 15px; margin: 20px 0; }
+        .waste-result { font-size: 32px; font-weight: 700; }
+        
+        .dealer-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border-left: 4px solid var(--light-green); box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        
+        .crop-select { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; }
+        .crop-option { padding: 15px; border: 2px solid #ddd; border-radius: 10px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .crop-option:hover { border-color: var(--light-green); }
+        .crop-option.selected { border-color: var(--primary-green); background: #e8f5e9; }
+        
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+        
+        .voice-btn { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--primary-green); color: white; border: none; font-size: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); cursor: pointer; }
+        
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; }
+            .product-grid { grid-template-columns: 1fr; }
+            .crop-select { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
 </head>
 <body>
-    <div class="dashboard-wrapper">
-        <!-- Sidebar -->
-        <nav class="sidebar">
-            <div class="sidebar-header text-center py-3">
-                <i class="fas fa-leaf fa-2x text-success"></i>
-                <h6 class="mt-2 fw-bold">Crop Engine</h6>
-            </div>
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="dashboard.html">
-                        <i class="fas fa-chart-line"></i> Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="marketplace.html">
-                        <i class="fas fa-shopping-cart"></i> Marketplace
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="waste.html">
-                        <i class="fas fa-recycle"></i> Waste to Value
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="help.html">
-                        <i class="fas fa-question-circle"></i> Help & Support
-                    </a>
-                </li>
-                <li class="nav-item mt-auto">
-                    <a class="nav-link text-danger" href="#" onclick="logout()">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
-                </li>
-            </ul>
-        </nav>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-icon"><i class="fas fa-leaf"></i></div>
+            <span>Smart Farmers</span>
+        </div>
+        <div class="sidebar-menu">
+            <a class="menu-item" href="smart-dashboard.html"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+            <a class="menu-item active" href="marketplace.html"><i class="fas fa-shopping-cart"></i><span>Marketplace</span></a>
+            <a class="menu-item" href="smart-dashboard.html#crops"><i class="fas fa-seedling"></i><span>Crops</span></a>
+            <a class="menu-item" href="smart-dashboard.html#weather"><i class="fas fa-cloud-sun"></i><span>Weather</span></a>
+            <a class="menu-item" href="index.html"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>
+        </div>
+    </nav>
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <header class="dashboard-header d-flex justify-content-between align-items-center px-4 py-3">
-                <div>
-                    <div id="guestBanner" class="guest-banner d-none">
-                        <i class="fas fa-user-clock"></i>
-                        <div class="guest-text">
-                            <strong>Guest Mode</strong>
-                            <small>Limited features - Login for full access</small>
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="header">
+            <h1 class="header-title"><i class="fas fa-shopping-cart text-success me-2"></i>Farm Marketplace</h1>
+            <button class="btn btn-success" onclick="loadProducts()"><i class="fas fa-sync-alt me-1"></i>Refresh</button>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="showTab('buy')"><i class="fas fa-shopping-cart me-2"></i>Buy Products</button>
+            <button class="tab-btn" onclick="showTab('sell')"><i class="fas fa-tags me-2"></i>Sell Produce</button>
+            <button class="tab-btn" onclick="showTab('waste')"><i class="fas fa-recycle me-2"></i>Sell Waste</button>
+            <button class="tab-btn" onclick="showTab('dealers')"><i class="fas fa-users me-2"></i>Dealers</button>
+        </div>
+
+        <!-- BUY PRODUCTS SECTION -->
+        <div class="page-section active" id="tab-buy">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title"><i class="fas fa-search me-2"></i>Search & Compare Products</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search seeds, fertilizers, tools..." onkeyup="searchProducts()">
                         </div>
-                        <button class="btn btn-sm btn-warning" onclick="upgradeToFull()">
-                            <i class="fas fa-arrow-up"></i> Upgrade
+                        <div class="col-md-4">
+                            <select class="form-control" id="categoryFilter" onchange="filterProducts()">
+                                <option value="">All Categories</option>
+                                <option value="seeds">Seeds</option>
+                                <option value="fertilizer">Fertilizers</option>
+                                <option value="pesticides">Pesticides</option>
+                                <option value="tools">Tools</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="priceCompareCard" style="display:none;">
+                <div class="card-header">
+                    <span class="card-title"><i class="fas fa-balance-scale text-warning me-2"></i>Price Comparison</span>
+                    <span class="badge bg-success" id="savingsBadge">Save ₹0</span>
+                </div>
+                <div class="card-body" id="priceCompareBody"></div>
+            </div>
+
+            <h5 class="mb-3"><i class="fas fa-box text-success me-2"></i>Products for Farmers</h5>
+            <div class="product-grid" id="productGrid"></div>
+        </div>
+
+        <!-- SELL PRODUCE SECTION -->
+        <div class="page-section" id="tab-sell">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title"><i class="fas fa-tag text-success me-2"></i>Sell Your Produce</span>
+                </div>
+                <div class="card-body">
+                    <div class="sell-form">
+                        <div class="form-group">
+                            <label class="form-label">Select Crop</label>
+                            <div class="crop-select">
+                                <div class="crop-option selected" onclick="selectCrop(this, 'Paddy')">🌾 Paddy</div>
+                                <div class="crop-option" onclick="selectCrop(this, 'Groundnut')">🥜 Groundnut</div>
+                                <div class="crop-option" onclick="selectCrop(this, 'Cotton')">🌿 Cotton</div>
+                                <div class="crop-option" onclick="selectCrop(this, 'Maize')">🌽 Maize</div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Quantity (Quintals)</label>
+                                    <input type="number" class="form-control" id="sellQuantity" placeholder="Enter quantity">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Expected Price (₹/Quintal)</label>
+                                    <input type="number" class="form-control" id="sellPrice" placeholder="Enter price">
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-success btn-lg w-100" onclick="listProduce()">
+                            <i class="fas fa-check-circle me-2"></i>List for Sale
                         </button>
                     </div>
-                    <h4 class="fw-bold mb-0">Agricultural Marketplace</h4>
-                    <small class="text-muted">Buy seeds, fertilizers, pesticides & equipment</small>
                 </div>
-                <div class="d-flex align-items-center gap-3">
-                    <select class="form-select form-select-sm" style="width:auto;" id="cropLanguage" onchange="changeCropLanguage()">
-                        <option value="en">English</option>
-                        <option value="ta">Tamil</option>
-                        <option value="hi">Hindi</option>
-                        <option value="te">Telugu</option>
-                    </select>
-                    <button class="btn btn-outline-success position-relative" onclick="showCompareModal()">
-                        <i class="fas fa-balance-scale"></i> Compare
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="compareCount">0</span>
-                    </button>
-                </div>
-            </header>
+            </div>
+        </div>
 
-            <div class="content p-4">
-                <!-- Search Bar -->
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <div class="search-box">
-                            <input type="text" id="productSearch" class="form-control" placeholder="Search products..." onkeyup="searchProducts()">
-                            <button class="btn btn-success btn-sm" onclick="searchProducts()">
-                                <i class="fas fa-search"></i>
-                            </button>
+        <!-- SELL WASTE SECTION -->
+        <div class="page-section" id="tab-waste">
+            <div class="waste-calculator">
+                <h4><i class="fas fa-recycle me-2"></i>Waste Product Calculator</h4>
+                <p>Calculate value of degraded/waste products from your farm</p>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Calculate Waste Value</span>
+                </div>
+                <div class="card-body">
+                    <div class="sell-form">
+                        <div class="form-group">
+                            <label class="form-label">Type of Waste</label>
+                            <select class="form-control" id="wasteType">
+                                <option value="damaged">Damaged Crop</option>
+                                <option value="spoiled">Spoiled Produce</option>
+                                <option value="byproduct">Crop Byproducts</option>
+                                <option value="stalks">Stalks/Stems</option>
+                            </select>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Category Filters -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="category-filters">
-                            <button class="btn btn-success active" onclick="filterProducts('All')">All</button>
-                            <button class="btn btn-outline-success" onclick="filterProducts('Seeds')">Seeds</button>
-                            <button class="btn btn-outline-success" onclick="filterProducts('Fertilizers')">Fertilizers</button>
-                            <button class="btn btn-outline-success" onclick="filterProducts('Pesticides')">Pesticides</button>
-                            <button class="btn btn-outline-success" onclick="filterProducts('Irrigation Equipment')">Irrigation Equipment</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Products Grid -->
-                <div class="row" id="productsGrid">
-                    <div class="col-12 text-center py-5">
-                        <div class="spinner-border text-success"></div>
-                        <p class="mt-2">Loading products...</p>
-                    </div>
-                </div>
-
-                <!-- Comparison Modal -->
-                <div class="modal fade" id="compareModal" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header bg-success text-white">
-                                <h5 class="modal-title">Product Comparison</h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered" id="compareTable">
-                                        <thead class="table-success">
-                                            <tr>
-                                                <th>Feature</th>
-                                                <!-- Dynamic columns -->
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <!-- Dynamic rows -->
-                                        </tbody>
-                                    </table>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Quantity (kg)</label>
+                                    <input type="number" class="form-control" id="wasteQuantity" placeholder="Enter quantity">
                                 </div>
-                                <div class="suggestion-box mt-3" id="bestSuggestion"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label">Condition</label>
+                                    <select class="form-control" id="wasteCondition">
+                                        <option value="good">Good (60-80%)</option>
+                                        <option value="average">Average (40-60%)</option>
+                                        <option value="poor">Poor (Below 40%)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn btn-warning btn-lg w-100" onclick="calculateWaste()">
+                            <i class="fas fa-calculator me-2"></i>Calculate Value
+                        </button>
+                    </div>
+
+                    <div id="wasteResult" style="display:none;" class="mt-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5>Estimated Value</h5>
+                                <div class="waste-result" id="wasteValue">₹0</div>
+                                <button class="btn btn-success mt-2" onclick="showTab('dealers')">
+                                    <i class="fas fa-handshake me-2"></i>Find Buyers
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+        </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="script.js"></script>
+        <!-- DEALERS SECTION -->
+        <div class="page-section" id="tab-dealers">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title"><i class="fas fa-users text-success me-2"></i>Verified Dealers</span>
+                </div>
+                <div class="card-body" id="dealersList"></div>
+            </div>
+        </div>
+    </main>
+
+    <button class="voice-btn" onclick="alert('Voice Assistant: Ask about buying, selling, or dealer information!')"><i class="fas fa-microphone"></i></button>
+
+    <script>
+        let selectedCrop = 'Paddy';
+        
+        const products = [
+            { id: 1, name: 'Paddy Seeds (BPT 5204)', category: 'seeds', price: 2800, original: 3200, image: '🌾', amazon: 3100, flipkart: 2950, snapdeal: 2850, meesho: 2700, jiomart: 2800, paytm: 2900 },
+            { id: 2, name: 'Groundnut Seeds (TAG 24)', category: 'seeds', price: 4500, original: 5000, image: '🥜', amazon: 4800, flipkart: 4600, snapdeal: 4500, meesho: 4400, jiomart: 4550, paytm: 4650 },
+            { id: 3, name: 'Urea Fertilizer 46%', category: 'fertilizer', price: 300, original: 350, image: '🧪', amazon: 340, flipkart: 320, snapdeal: 310, meesho: 295, jiomart: 305, paytm: 315 },
+            { id: 4, name: 'DAP Fertilizer', category: 'fertilizer', price: 1350, original: 1500, image: '🧪', amazon: 1450, flipkart: 1400, snapdeal: 1350, meesho: 1320, jiomart: 1380, paytm: 1420 },
+            { id: 5, name: 'Organic Pesticide', category: 'pesticides', price: 450, original: 550, image: '🐛', amazon: 520, flipkart: 480, snapdeal: 460, meesho: 440, jiomart: 470, paytm: 490 },
+            { id: 6, name: 'Spray Pump 16L', category: 'tools', price: 850, original: 1000, image: '🔧', amazon: 950, flipkart: 900, snapdeal: 870, meesho: 820, jiomart: 880, paytm: 910 },
+            { id: 7, name: 'Garden Hoe', category: 'tools', price: 250, original: 300, image: '🔧', amazon: 280, flipkart: 260, snapdeal: 255, meesho: 240, jiomart: 250, paytm: 265 },
+            { id: 8, name: 'Cotton Seeds', category: 'seeds', price: 750, original: 850, image: '🌿', amazon: 820, flipkart: 780, snapdeal: 760, meesho: 740, jiomart: 770, paytm: 790 },
+            { id: 9, name: 'NPK Fertilizer 10-26-26', category: 'fertilizer', price: 1200, original: 1400, image: '🧪', amazon: 1350, flipkart: 1250, snapdeal: 1220, meesho: 1180, jiomart: 1210, paytm: 1260 },
+            { id: 10, name: 'Maize Seeds', category: 'seeds', price: 2200, original: 2500, image: '🌽', amazon: 2400, flipkart: 2300, snapdeal: 2250, meesho: 2180, jiomart: 2280, paytm: 2320 },
+            { id: 11, name: 'Water Pump 1HP', category: 'tools', price: 4500, original: 5200, image: '⚙️', amazon: 5000, flipkart: 4700, snapdeal: 4550, meesho: 4400, jiomart: 4650, paytm: 4750 },
+            { id: 12, name: 'Irrigation Pipe 100m', category: 'tools', price: 1800, original: 2200, image: '🔧', amazon: 2100, flipkart: 1950, snapdeal: 1850, meesho: 1750, jiomart: 1900, paytm: 2000 }
+        ];
+
+        const dealerList = [
+            { name: 'ABC Traders', phone: '9876543210', type: 'produce', rating: 4.5, location: 'Coimbatore', buyPrice: 2800 },
+            { name: 'XYZ Agro', phone: '9876543211', type: 'both', rating: 4.8, location: 'Chittoor', buyPrice: 2950 },
+            { name: 'Farm Fresh Co', phone: '9876543212', type: 'produce', rating: 4.2, location: 'Tirupati', buyPrice: 2750 },
+            { name: 'Green Dealers', phone: '9876543213', type: 'waste', rating: 4.0, location: 'Coimbatore', buyPrice: 800 },
+            { name: 'Agri Solutions', phone: '9876543214', type: 'both', rating: 4.7, location: 'Coimbatore', buyPrice: 2850 }
+        ];
+
+        const allWebsites = [
+            { name: 'Amazon', color: '#FF9900', icon: 'fab fa-amazon' },
+            { name: 'Flipkart', color: '#2874F0', icon: 'fab fa-flipboard' },
+            { name: 'Meesho', color: '#D62828', icon: 'fas fa-shopping-bag' },
+            { name: 'JioMart', color: '#0066FF', icon: 'fas fa-store' },
+            { name: 'Snapdeal', color: '#E74C3C', icon: 'fas fa-shipping-fast' },
+            { name: 'Paytm', color: '#00BAF2', icon: 'fas fa-wallet' }
+        ];
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            
+            if(tab === 'buy') loadProducts();
+            if(tab === 'dealers') loadDealers();
+        }
+
+        function loadProducts() {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = products.map(p => `
+                <div class="product-card">
+                    <div class="product-img">${p.image}</div>
+                    <div class="product-name">${p.name}</div>
+                    <div class="product-price">₹${p.price}<span class="product-original ms-2">₹${p.original}</span></div>
+                    <button class="btn btn-success w-100 mt-2" onclick="showCompare(${p.id})">Compare & Buy</button>
+                </div>
+            `).join('');
+        }
+
+        function searchProducts() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = products.filter(p => p.name.toLowerCase().includes(query));
+            displayProducts(filtered);
+        }
+
+        function filterProducts() {
+            const cat = document.getElementById('categoryFilter').value;
+            const filtered = cat ? products.filter(p => p.category === cat) : products;
+            displayProducts(filtered);
+        }
+
+        function displayProducts(list) {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = list.map(p => `
+                <div class="product-card">
+                    <div class="product-img">${p.image}</div>
+                    <div class="product-name">${p.name}</div>
+                    <div class="product-price">₹${p.price}<span class="product-original ms-2">₹${p.original}</span></div>
+                    <button class="btn btn-success w-100 mt-2" onclick="showCompare(${p.id})">Compare</button>
+                </div>
+            `).join('');
+        }
+
+        function showCompare(productId) {
+            const p = products.find(x => x.id === productId);
+            if (!p) return;
+
+            const prices = [
+                { name: 'Amazon', price: p.amazon, url: `https://amazon.in/s?k=${encodeURIComponent(p.name)}`, color: '#FF9900' },
+                { name: 'Flipkart', price: p.flipkart, url: `https://flipkart.com/search?q=${encodeURIComponent(p.name)}`, color: '#2874F0' },
+                { name: 'Meesho', price: p.meesho, url: `https://www.meesho.com/search?q=${encodeURIComponent(p.name)}`, color: '#D62828' },
+                { name: 'JioMart', price: p.jiomart, url: `https://www.jiomart.com/search/${encodeURIComponent(p.name)}`, color: '#0066FF' },
+                { name: 'Snapdeal', price: p.snapdeal, url: `https://www.snapdeal.com/search?keyword=${encodeURIComponent(p.name)}`, color: '#E74C3C' },
+                { name: 'Paytm', price: p.paytm, url: `https://paytm.com/search?q=${encodeURIComponent(p.name)}`, color: '#00BAF2' },
+                { name: 'Local Dealer (Best)', price: p.price, url: '#', color: '#2E7D32' }
+            ].sort((a, b) => a.price - b.price);
+
+            const minPrice = prices[0].price;
+            const maxPrice = prices[prices.length - 1].price;
+            const savings = maxPrice - minPrice;
+            const bestSite = prices[0].name;
+
+            document.getElementById('priceCompareCard').style.display = 'block';
+            document.getElementById('savingsBadge').textContent = `Save ₹${savings}`;
+            document.getElementById('priceCompareBody').innerHTML = `
+                <h5 class="mb-3">${p.name}</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-success">
+                            <tr>
+                                <th>Website</th>
+                                <th>Price</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${prices.map((site, idx) => `
+                                <tr class="${idx === 0 ? 'table-success' : ''}">
+                                    <td><strong>${site.name}</strong> ${idx === 0 ? '✅ Best' : ''}</td>
+                                    <td>₹${site.price}</td>
+                                    <td>
+                                        <a href="${site.url}" target="_blank" class="btn btn-sm" style="background:${site.color};color:white;">
+                                            ${site.name === 'Local Dealer (Best)' ? '<i class="fas fa-phone"></i> Contact' : '<i class="fas fa-external-link-alt"></i> Buy'}
+                                        </a>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3 p-3 bg-light rounded d-flex justify-content-between align-items-center">
+                    <span><strong>🏆 Best Price: ₹${minPrice} at ${bestSite}</strong></span>
+                    <span class="badge bg-success">You Save ₹${savings}</span>
+                </div>
+            `;
+        }
+
+        function loadDealers() {
+            const grid = document.getElementById('dealerGrid');
+            grid.innerHTML = dealerList.map(d => `
+                <div class="product-card">
+                    <div class="product-img">🏪</div>
+                    <div class="product-name">${d.name}</div>
+                    <div class="mt-2"><strong>📍 ${d.location}</strong></div>
+                    <div class="mt-2"><strong>📞 ${d.phone}</strong></div>
+                    <div class="mt-2"><strong>💰 Buy at ₹${d.buyPrice}/Q</strong></div>
+                    <div class="mt-2">⭐ ${d.rating}/5</div>
+                    <button class="btn btn-success w-100 mt-2" onclick="contactDealer('${d.phone}')">Contact</button>
+                </div>
+            `).join('');
+        }
+
+        function contactDealer(phone) {
+            window.open(`tel:${phone}`, '_self');
+        }
+
+        function selectCrop(el, crop) {
+            document.querySelectorAll('.crop-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedCrop = crop;
+        }
+
+        function listProduce() {
+            const qty = document.getElementById('sellQuantity').value;
+            const price = document.getElementById('sellPrice').value;
+            
+            if(!qty || !price) { alert('Please fill all fields'); return; }
+            
+            alert(`✅ Listed!\n\nCrop: ${selectedCrop}\nQuantity: ${qty} Quintals\nPrice: ₹${price}/Q\n\nDealers will contact you!`);
+        }
+
+        function calculateWaste() {
+            const qty = document.getElementById('wasteQuantity').value;
+            const type = document.getElementById('wasteType').value;
+            const condition = document.getElementById('wasteCondition').value;
+            
+            if(!qty) { alert('Enter quantity'); return; }
+            
+            const rates = { damaged: 800, spoiled: 500, byproduct: 300, stalks: 150 };
+            const conditionMultipliers = { good: 1, average: 0.6, poor: 0.3 };
+            
+            const value = Math.round(qty * rates[type] * conditionMultipliers[condition]);
+            
+            document.getElementById('wasteValue').textContent = '₹' + value.toLocaleString();
+            document.getElementById('wasteResult').style.display = 'block';
+        }
+
+        function loadDealers() {
+            const list = document.getElementById('dealersList');
+            list.innerHTML = dealerList.map(d => `
+                <div class="dealer-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>${d.name}</strong>
+                            <div class="text-muted">${d.location} | ${d.phone}</div>
+                            <div class="text-warning">${'★'.repeat(Math.floor(d.rating))}</div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-${d.type==='produce'?'success':d.type==='waste'?'warning':'info'}">${d.type}</span>
+                            <div class="mt-2"><strong>₹${d.buyPrice}/Q</strong></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        loadProducts();
+    </script>
 </body>
 </html>

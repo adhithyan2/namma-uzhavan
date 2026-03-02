@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate Prediction - Smart Farmers Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-green: #1b5e20;
+            --secondary-green: #2e7d32;
+            --light-green: #4caf50;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f9f5; }
+        .sidebar { min-height: 100vh; background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+        .sidebar .nav-link { color: #333; padding: 12px 20px; border-radius: 8px; margin: 4px 0; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background: var(--light-green); color: white; }
+        .forecast-card { border-radius: 12px; padding: 1.5rem; text-align: center; transition: all 0.3s; }
+        .forecast-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        .alert-card { border-left: 4px solid; }
+        .alert-red { border-color: #dc3545; }
+        .alert-yellow { border-color: #ffc107; }
+        .alert-green { border-color: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2 sidebar p-0">
+                <div class="p-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item"><a class="nav-link" href="farmer-dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="climate-prediction.html"><i class="fas fa-cloud-sun"></i> Climate Prediction</a></li>
+                        <li class="nav-item"><a class="nav-link" href="crop-recommendation.html"><i class="fas fa-seedling"></i> Crop Suggestions</a></li>
+                        <li class="nav-item"><a class="nav-link" href="risk-alerts.html"><i class="fas fa-exclamation-triangle"></i> Risk Alerts</a></li>
+                        <li class="nav-item"><a class="nav-link" href="voice-assistant.html"><i class="fas fa-microphone"></i> Voice Assistant</a></li>
+                        <li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-10 p-4">
+                <h4 class="mb-4"><i class="fas fa-cloud-sun me-2 text-success"></i>Climate Prediction</h4>
+                
+                <!-- Weekly Forecast -->
+                <div class="card mb-4">
+                    <div class="card-header bg-white"><h5 class="mb-0">Weekly Rainfall & Temperature Forecast</h5></div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col forecast-card bg-primary text-white"><p class="mb-1">Mon</p><i class="fas fa-sun fa-2x"></i><h5>28°C</h5><small>0 mm</small></div>
+                            <div class="col forecast-card bg-info text-white"><p class="mb-1">Tue</p><i class="fas fa-cloud fa-2x"></i><h5>26°C</h5><small>5 mm</small></div>
+                            <div class="col forecast-card bg-warning text-dark"><p class="mb-1">Wed</p><i class="fas fa-cloud-rain fa-2x"></i><h5>24°C</h5><small>45 mm</small></div>
+                            <div class="col forecast-card bg-danger text-white"><p class="mb-1">Thu</p><i class="fas fa-cloud-showers-heavy fa-2x"></i><h5>22°C</h5><small>85 mm</small></div>
+                            <div class="col forecast-card bg-danger text-white"><p class="mb-1">Fri</p><i class="fas fa-cloud-showers-heavy fa-2x"></i><h5>21°C</h5><small>95 mm</small></div>
+                            <div class="col forecast-card bg-info text-white"><p class="mb-1">Sat</p><i class="fas fa-cloud-sun fa-2x"></i><h5>25°C</h5><small>15 mm</small></div>
+                            <div class="col forecast-card bg-success text-white"><p class="mb-1">Sun</p><i class="fas fa-sun fa-2x"></i><h5>27°C</h5><small>0 mm</small></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Temperature Trend -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-white"><h6>Temperature Trend</h6></div>
+                            <div class="card-body">
+                                <div style="height: 200px; display: flex; align-items: flex-end; justify-content: space-around; padding: 10px;">
+                                    <div style="height: 60%; width: 10%; background: #ff9800; border-radius: 5px 5px 0 0;"></div>
+                                    <div style="height: 50%; width: 10%; background: #ff9800; border-radius: 5px 5px 0 0;"></div>
+                                    <div style="height: 40%; width: 10%; background: #ff9800; border-radius: 5px 5px 0 0;"></div>
+                                    <div style="height: 35%; width: 10%; background: #ff9800; border-radius: 5px 5px 0 0;"></div>
+                                    <div style="height: 30%; width: 10%; background: #ff9800; border-radius: 5px 5px 0 0;"></div>
+                                    <div style="height: 45%; width: 10%; background: #ff9800; border-radius: 5px 5px 0 0;"></div>
+                                    <div style="height: 55%; width: 10%; background: #ff9800; border-radius: 5px 5px 0 0;"></div>
+                                </div>
+                                <div class="d-flex justify-content-around mt-2"><small>Mon</small><small>Tue</small><small>Wed</small><small>Thu</small><small>Fri</small><small>Sat</small><small>Sun</small></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-white"><h6>Rainfall Trend</h6></div>
+                            <div class="card-body">
+                                <div style="height: 200px; display: flex; align-items: flex-end; justify-content: space-around; padding: 10px;">
+                                    <div style="height: 5%; width: 10%; background: #2196f3; border-radius: 5px 5px 0 0;"></div>
+                                    <div style="height: 15%; width: 10%; background: #2196f3; border-radius: 5px 5px 0 0;"></div>
+                                    <div style="height: 50%; width: 10%; background: #2196f3; border-radius: 5px 5px 0 0;"></div>
+                                    <div style="height: 85%; width: 10%; background: #2196f3; border-radius: 5px 5px 0 0;"></div>
+                                    <div style="height: 95%; width: 10%; background: #2196f3; border-radius: 5px 5px 0 0;"></div>
+                                    <div style="height: 25%; width: 10%; background: #2196f3; border-radius: 5px 5px 0 0;"></div>
+                                    <div style="height: 5%; width: 10%; background: #2196f3; border-radius: 5px 5px 0 0;"></div>
+                                </div>
+                                <div class="d-flex justify-content-around mt-2"><small>Mon</small><small>Tue</small><small>Wed</small><small>Thu</small><small>Fri</small><small>Sat</small><small>Sun</small></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts -->
+                <div class="card">
+                    <div class="card-header bg-white"><h5 class="mb-0">Climate Alerts</h5></div>
+                    <div class="card-body">
+                        <div class="alert alert-card alert-red bg-light mb-3">
+                            <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                            <strong>Flood Alert:</strong> Heavy rainfall expected on Thursday-Friday. Avoid field work.
+                        </div>
+                        <div class="alert alert-card alert-yellow bg-light mb-3">
+                            <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                            <strong>Drought Watch:</strong> Water shortage may occur in coming weeks.
+                        </div>
+                        <div class="alert alert-card alert-green bg-light">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <strong>Normal Conditions:</strong> Temperature and humidity are within normal range.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

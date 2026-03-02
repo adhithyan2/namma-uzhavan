@@ -1043,3 +1043,27 @@ body {
 .product-actions .btn:hover {
     background: #1B5E20;
 }
+.village-card {
+    background: #f4f9f4;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+.village-grid {
+    display: flex;
+    justify-content: space-between;
+}
+/* Center the village/farmers card in the dashboard */
+.dashboard-module-wrapper {
+    display: flex;
+    justify-content: center; /* horizontal center */
+    align-items: flex-start; /* optional: align top */
+    margin: 20px 0; /* space from other modules */
+    width: 100%;
+}
+
+.dashboard-module-wrapper .village-card {
+    max-width: 800px; /* card width */
+    width: 100%;
+}

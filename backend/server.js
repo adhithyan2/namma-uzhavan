@@ -1154,12 +1154,22 @@ app.post('/api/farmer-profile-update', async (req, res) => {
 // DELETE /api/farmers/:id
 app.delete('/api/farmers/:id', async (req, res) => {
   try {
-    const index = farmers.findIndex(f => f.id === req.params.id);
-    if (index === -1) {
-      return res.status(404).json({ error: 'Farmer not found' });
+    const id = req.params.id;
+    
+    // Delete from memory
+    const index = farmers.findIndex(f => f.id === id || f.farmerId === id);
+    if (index !== -1) {
+      farmers.splice(index, 1);
     }
     
-    farmers.splice(index, 1);
+    // Delete from MongoDB
+    try {
+      await Farmer.findOneAndDelete({ id: id });
+      await Farmer.findOneAndDelete({ _id: id });
+    } catch(e) {
+      console.log('MongoDB delete error:', e.message);
+    }
+    
     res.json({ message: 'Farmer deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });

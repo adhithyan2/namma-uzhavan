@@ -244,21 +244,50 @@
         <div class="page-section" id="page-location">
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title"><i class="fas fa-map-marker-alt text-success me-2"></i><span data-i18n="select_location">Select Farm Location</span></span>
-                    <button class="btn btn-success btn-sm" onclick="detectGPS()"><i class="fas fa-crosshairs me-1"></i><span data-i18n="use_gps">Use GPS</span></button>
+                    <span class="card-title"><i class="fas fa-map-marker-alt text-success me-2"></i>Select Farm Location</span>
+                    <button class="btn btn-success btn-sm" onclick="detectGPS()"><i class="fas fa-crosshairs me-1"></i>Auto Detect</button>
                 </div>
                 <div class="card-body">
-                    <div class="location-box">
-                        <select id="villageSelect" onchange="updateLocation()">
-                            <option value="Coimbatore">Coimbatore, Tamil Nadu</option>
-                            <option value="Chittoor">Chittoor, Andhra Pradesh</option>
-                            <option value="Kallur">Kallur, Telangana</option>
-                            <option value="Hyderabad">Hyderabad, Telangana</option>
-                            <option value="Bangalore">Bangalore, Karnataka</option>
-                        </select>
-                        <button class="btn btn-primary" onclick="updateLocation()">Get Weather</button>
+                    <!-- Type village name -->
+                    <div class="mb-3">
+                        <input type="text" id="villageInput" class="form-control" placeholder="Type village/city name...">
+                        <button class="btn btn-primary mt-2" onclick="getWeatherForInput()">Get Weather</button>
                     </div>
-                    <div id="map"></div>
+                    
+                    <!-- Quick Select dropdown -->
+                    <div class="mt-2">
+                        <small class="text-muted">Quick Select:</small>
+                        <select id="villageSelect" class="form-select mt-1" onchange="updateLocation()">
+                            <option value="">-- Select --</option>
+                            <option value="Coimbatore">Coimbatore</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Madurai">Madurai</option>
+                            <option value="Chittoor">Chittoor</option>
+                            <option value="Kallur">Kallur</option>
+                            <option value="Hyderabad">Hyderabad</option>
+                            <option value="Bangalore">Bangalore</option>
+                            <option value="Mangalore">Mangalore</option>
+                            <option value="Kochi">Kochi</option>
+                            <option value="Thiruvananthapuram">Thiruvananthapuram</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Weather Display -->
+                    <div id="locationWeather" class="mt-3 p-3" style="background:linear-gradient(135deg,#667eea,#764ba2);border-radius:10px;color:white;display:none;">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <h2 id="locTemp">--°C</h2>
+                                <p id="locCondition" class="mb-0">--</p>
+                            </div>
+                            <div class="col-6">
+                                <p class="mb-1"><i class="fas fa-tint me-2"></i>Humidity: <span id="locHumidity">--</span>%</p>
+                                <p class="mb-1"><i class="fas fa-wind me-2"></i>Wind: <span id="locWind">--</span> m/s</p>
+                                <p class="mb-0"><i class="fas fa-map-marker me-2"></i><span id="locVillage">--</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="map" class="mt-3"></div>
                     <div id="locationInfo" style="margin-top:15px;padding:15px;background:#e8f5e9;border-radius:10px;display:none;">
                         <strong><i class="fas fa-check-circle text-success"></i> Location Selected</strong>
                         <p id="selectedAddress" class="mb-0 mt-2"></p>
@@ -829,10 +858,117 @@
             }
         }
 
+        // Get weather for typed input
+        function getWeatherForInput() {
+            const village = document.getElementById('villageInput').value.trim();
+            if (!village) {
+                alert('Please enter a village or city name');
+                return;
+            }
+            
+            fetch(`/api/weather?location=${village}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.temperature !== undefined) {
+                        document.getElementById('locationWeather').style.display = 'block';
+                        document.getElementById('locTemp').textContent = Math.round(data.temperature) + '°C';
+                        document.getElementById('locCondition').textContent = data.weatherCondition || data.condition;
+                        document.getElementById('locHumidity').textContent = data.humidity;
+                        document.getElementById('locWind').textContent = data.windSpeed;
+                        document.getElementById('locVillage').textContent = data.location || village;
+                        document.getElementById('villageSelect').value = data.location || village;
+                        loadAllData();
+                    } else {
+                        alert('Location not found. Try another name.');
+                    }
+                })
+                .catch(e => alert('Error getting weather. Try again.'));
+        }
+
         function updateLocation() {
             const village = document.getElementById('villageSelect').value;
-            map.setView([11.0318, 77.0266], 12);
+            
+            // Show weather for selected village
+            fetch(`/api/weather?location=${village}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('locationWeather').style.display = 'block';
+                    document.getElementById('locTemp').textContent = Math.round(data.temperature) + '°C';
+                    document.getElementById('locCondition').textContent = data.weatherCondition || data.condition;
+                    document.getElementById('locHumidity').textContent = data.humidity;
+                    document.getElementById('locWind').textContent = data.windSpeed;
+                    document.getElementById('locVillage').textContent = data.location;
+                })
+                .catch(e => console.log('Weather error:', e));
+            
+            // Update map
+            const coords = { 'Coimbatore': [11.0168, 76.9558], 'Chennai': [13.0827, 80.2707], 'Madurai': [9.9252, 78.1198], 'Chittoor': [13.2170, 79.1000], 'Kallur': [13.3189, 79.4243], 'Hyderabad': [17.3850, 78.4867], 'Bangalore': [12.9716, 77.5946], 'Mangalore': [12.2958, 74.8728], 'Kochi': [9.9312, 76.2673], 'Thiruvananthapuram': [8.5241, 76.9366] };
+            const pos = coords[village] || [11.0168, 76.9558];
+            if (map) map.setView(pos, 12);
+            
             loadAllData();
+        }
+
+        // Get weather for typed input
+        function getWeatherForInput() {
+            const village = document.getElementById('villageInput').value.trim();
+            if (!village) {
+                alert('Please enter a village or city name');
+                return;
+            }
+            
+            fetch(`/api/weather?location=${village}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.temperature !== undefined) {
+                        document.getElementById('locationWeather').style.display = 'block';
+                        document.getElementById('locTemp').textContent = Math.round(data.temperature) + '°C';
+                        document.getElementById('locCondition').textContent = data.weatherCondition || data.condition;
+                        document.getElementById('locHumidity').textContent = data.humidity;
+                        document.getElementById('locWind').textContent = data.windSpeed;
+                        document.getElementById('locVillage').textContent = data.location || village;
+                        document.getElementById('villageSelect').value = data.location || village;
+                        loadAllData();
+                    } else {
+                        alert('Location not found. Try another name.');
+                    }
+                })
+                .catch(e => alert('Error getting weather. Try again.'));
+        }
+
+        // Detect GPS Location
+        function detectGPS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    try {
+                        const res = await fetch(`/api/weather-by-coords?lat=${lat}&lon=${lon}`);
+                        const data = await res.json();
+                        
+                        document.getElementById('locationWeather').style.display = 'block';
+                        document.getElementById('locTemp').textContent = Math.round(data.temperature) + '°C';
+                        document.getElementById('locCondition').textContent = data.weatherCondition || data.condition;
+                        document.getElementById('locHumidity').textContent = data.humidity;
+                        document.getElementById('locWind').textContent = data.windSpeed;
+                        document.getElementById('locVillage').textContent = data.location || 'Your Location';
+                        
+                        if (map && marker) {
+                            map.setView([lat, lon], 12);
+                            marker.setLatLng([lat, lon]);
+                        }
+                        
+                        loadAllData();
+                    } catch(e) {
+                        alert('Could not get weather for your location');
+                    }
+                }, () => {
+                    alert('Could not detect GPS location');
+                });
+            } else {
+                alert('GPS not supported in this browser');
+            }
         }
 
         async function loadAllData() {

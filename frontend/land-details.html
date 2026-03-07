@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Land Details - Namma Uzhavan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #f5f5f5; }
+        .detail-card { background: white; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .info-label { color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .info-value { font-size: 16px; font-weight: 600; color: #333; }
+        .section-title { color: #1B5E20; border-bottom: 2px solid #1B5E20; padding-bottom: 10px; margin-bottom: 20px; }
+        .doc-card { border: 1px solid #ddd; border-radius: 10px; padding: 15px; text-align: center; transition: all 0.3s; }
+        .doc-card:hover { border-color: #1B5E20; transform: translateY(-3px); }
+        .land-type-badge { font-size: 14px; padding: 5px 15px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-success">
+        <div class="container">
+            <a href="land-search.html" class="btn btn-light">
+                <i class="fas fa-arrow-left me-2"></i>Back to Search
+            </a>
+            <span class="navbar-brand mb-0 h1">Land Record Details</span>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div id="loading" class="text-center py-5">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Loading land details...</p>
+        </div>
+
+        <div id="content" style="display:none;">
+            <!-- Owner & Basic Details -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="detail-card p-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="info-label">Owner Name</p>
+                                <p class="info-value" id="ownerName">-</p>
+                            </div>
+                            <div class="col-md-3">
+                                <p class="info-label">Aadhaar Number</p>
+                                <p class="info-value" id="aadhaarNumber">-</p>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <span class="badge bg-success land-type-badge" id="landType">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Land Details -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="detail-card p-4">
+                        <h5 class="section-title"><i class="fas fa-map me-2"></i>Land Details</h5>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <p class="info-label">Patta Number</p>
+                                <p class="info-value" id="pattaNumber">-</p>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <p class="info-label">Survey Number</p>
+                                <p class="info-value" id="surveyNumber">-</p>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <p class="info-label">Village</p>
+                                <p class="info-value" id="village">-</p>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <p class="info-label">Taluk</p>
+                                <p class="info-value" id="taluk">-</p>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <p class="info-label">District</p>
+                                <p class="info-value" id="district">-</p>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <p class="info-label">Land Size</p>
+                                <p class="info-value" id="landSize">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="detail-card p-4">
+                        <h5 class="section-title"><i class="fas fa-rupee-sign me-2"></i>Value Details</h5>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <p class="info-label">Guideline Value</p>
+                                <p class="info-value" id="guidelineValue">-</p>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <p class="info-label">Last Sale Price</p>
+                                <p class="info-value" id="lastSalePrice">-</p>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <p class="info-label">Last Sale Date</p>
+                                <p class="info-value" id="lastSaleDate">-</p>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <p class="info-label">Current Crop</p>
+                                <p class="info-value" id="currentCrop">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sale History -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="detail-card p-4">
+                        <h5 class="section-title"><i class="fas fa-history me-2"></i>Sale History</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-success">
+                                    <tr>
+                                        <th>Previous Owner</th>
+                                        <th>Buyer Name</th>
+                                        <th>Sale Amount</th>
+                                        <th>Sale Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="saleHistoryTable">
+                                    <tr><td colspan="4" class="text-center text-muted">No sale history available</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="detail-card p-4">
+                        <h5 class="section-title"><i class="fas fa-file-alt me-2"></i>Documents</h5>
+                        <div class="row" id="documentsList">
+                            <div class="col-md-3 mb-3">
+                                <div class="doc-card">
+                                    <i class="fas fa-file-pdf text-danger" style="font-size: 40px;"></i>
+                                    <p class="mt-2 mb-1 fw-bold">Patta Document</p>
+                                    <button class="btn btn-sm btn-outline-success">View</button>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="doc-card">
+                                    <i class="fas fa-file-contract text-primary" style="font-size: 40px;"></i>
+                                    <p class="mt-2 mb-1 fw-bold">Sale Deed</p>
+                                    <button class="btn btn-sm btn-outline-success">View</button>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="doc-card">
+                                    <i class="fas fa-file-certificate text-warning" style="font-size: 40px;"></i>
+                                    <p class="mt-2 mb-1 fw-bold">EC Certificate</p>
+                                    <button class="btn btn-sm btn-outline-success">View</button>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="doc-card">
+                                    <i class="fas fa-map text-info" style="font-size: 40px;"></i>
+                                    <p class="mt-2 mb-1 fw-bold">Land Map</p>
+                                    <button class="btn btn-sm btn-outline-success">View</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const landId = urlParams.get('id');
+
+        if (landId) {
+            loadLandDetails(landId);
+        } else {
+            document.getElementById('loading').innerHTML = '<p class="text-danger">Invalid land ID</p>';
+        }
+
+        async function loadLandDetails(id) {
+            try {
+                const res = await fetch(`/api/land-records/${id}`);
+                if (!res.ok) throw new Error('Land record not found');
+                
+                const record = await res.json();
+
+                document.getElementById('ownerName').textContent = record.ownerName || '-';
+                document.getElementById('aadhaarNumber').textContent = record.aadhaarNumber || '-';
+                document.getElementById('pattaNumber').textContent = record.pattaNumber || '-';
+                document.getElementById('surveyNumber').textContent = record.surveyNumber || '-';
+                document.getElementById('village').textContent = record.village || '-';
+                document.getElementById('taluk').textContent = record.taluk || '-';
+                document.getElementById('district').textContent = record.district || '-';
+                document.getElementById('landSize').textContent = (record.landSize || '-') + ' acres';
+                document.getElementById('landType').textContent = record.landType || '-';
+                document.getElementById('currentCrop').textContent = record.currentCrop || '-';
+                document.getElementById('guidelineValue').textContent = record.guidelineValue ? '₹' + record.guidelineValue.toLocaleString() : '-';
+                document.getElementById('lastSalePrice').textContent = record.lastSalePrice ? '₹' + record.lastSalePrice.toLocaleString() : '-';
+                document.getElementById('lastSaleDate').textContent = record.lastSaleDate ? new Date(record.lastSaleDate).toLocaleDateString() : '-';
+
+                // Load sale history if available
+                if (record.surveyNumber) {
+                    loadSaleHistory(record.surveyNumber);
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+
+            } catch (error) {
+                document.getElementById('loading').innerHTML = `<p class="text-danger">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function loadSaleHistory(surveyNumber) {
+            try {
+                const res = await fetch(`/api/land-records/by-survey/${surveyNumber}`);
+                const data = await res.json();
+
+                if (data.saleHistory && data.saleHistory.length > 0) {
+                    const historyHtml = data.saleHistory.map(sale => `
+                        <tr>
+                            <td>${sale.previousOwner || '-'}</td>
+                            <td>${sale.buyerName || '-'}</td>
+                            <td>₹${sale.saleAmount ? sale.saleAmount.toLocaleString() : '-'}</td>
+                            <td>${sale.saleDate ? new Date(sale.saleDate).toLocaleDateString() : '-'}</td>
+                        </tr>
+                    `).join('');
+                    document.getElementById('saleHistoryTable').innerHTML = historyHtml;
+                }
+            } catch (e) {
+                console.log('No sale history');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -58,7 +58,7 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            background: #0a0a0a;
+            background: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=80') center/cover no-repeat;
         }
 
         .video-bg {
@@ -67,33 +67,6 @@
             object-fit: cover;
             transform: scale(1);
             animation: videoZoom 20s ease-in-out infinite alternate;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        .video-bg.loaded {
-            opacity: 1;
-        }
-
-        .video-loader {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255,255,255,0.1);
-            border-top-color: #10b981;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
 
         @keyframes videoZoom {
@@ -849,12 +822,8 @@
     <section class="hero" id="hero">
         <!-- Video Background -->
         <div class="video-container">
-            <div class="video-loader" id="videoLoader">
-                <div class="spinner"></div>
-            </div>
-            <video class="video-bg" id="bgVideo" autoplay muted loop playsinline preload="auto" poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1920' height='1080'%3E%3Crect fill='%230a0a0a'/%3E%3C/svg%3E">
+            <video class="video-bg" autoplay muted loop playsinline>
                 <source src="videos/scale-1.mp4" type="video/mp4">
-                Your browser does not support the video tag.
             </video>
         </div>
 
@@ -930,25 +899,12 @@
 
     <!-- JavaScript -->
     <script>
-        // Video loader handling
-        const bgVideo = document.getElementById('bgVideo');
-        const videoLoader = document.getElementById('videoLoader');
-        
-        bgVideo.addEventListener('canplaythrough', function() {
-            bgVideo.classList.add('loaded');
-            videoLoader.style.display = 'none';
-        });
-        
-        bgVideo.addEventListener('error', function() {
-            videoLoader.innerHTML = '<i class="fas fa-image text-white" style="font-size:40px"></i>';
-        });
-
         // Wait for page to load
         window.addEventListener('load', function() {
             // Hide preloader
             setTimeout(function() {
                 document.getElementById('preloader').classList.add('hidden');
-            }, 1500);
+            }, 500);
         });
 
         // Navigation scroll effect

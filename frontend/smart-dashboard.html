@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="language-switcher.js"></script>
     
     <style>
         :root { --primary-green: #1B5E20; --secondary-green: #2E7D32; --light-green: #4CAF50; }
@@ -147,12 +148,11 @@
                         <i class="fas fa-globe"></i> <span id="smartCurrentLang">EN</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="javascript:smartSetLanguage('en')">English</a></li>
-                        <li><a class="dropdown-item" href="javascript:smartSetLanguage('ta')">தமிழ் (Tamil)</a></li>
-                        <li><a class="dropdown-item" href="javascript:smartSetLanguage('hi')">हिन्दी (Hindi)</a></li>
-                        <li><a class="dropdown-item" href="javascript:smartSetLanguage('te')">Telugu</a></li>
-                        <li><a class="dropdown-item" href="javascript:smartSetLanguage('kn')">ಕನ್ನಡ (Kannada)</a></li>
-                        <li><a class="dropdown-item" href="javascript:smartSetLanguage('ml')">മലയാളം (Malayalam)</a></li>
+                        <li><a class="dropdown-item" href="javascript:changeLanguage('en')">English</a></li>
+                        <li><a class="dropdown-item" href="javascript:changeLanguage('ta')">தமிழ் (Tamil)</a></li>
+                        <li><a class="dropdown-item" href="javascript:changeLanguage('hi')">हिंदी (Hindi)</a></li>
+                        <li><a class="dropdown-item" href="javascript:changeLanguage('ml')">മലയാളം (Malayalam)</a></li>
+                        <li><a class="dropdown-item" href="javascript:changeLanguage('kn')">ಕನ್ನಡ (Kannada)</a></li>
                     </ul>
                 </div>
             </div>

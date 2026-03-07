@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soil Moisture Monitoring - Namma Uzhavan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="language-switcher.js"></script>
+    <style>
+        :root { --primary-green: #1B5E20; --secondary-green: #2E7D32; --light-green: #4CAF50; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: #f5f5f5; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 260px; background: linear-gradient(180deg, var(--primary-green), #0D3D12); z-index: 1000; }
+        .sidebar-header { padding: 20px; color: white; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 12px; }
+        .sidebar-menu { padding: 15px; }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: rgba(255,255,255,0.8); text-decoration: none; border-radius: 10px; margin-bottom: 5px; cursor: pointer; transition: 0.3s; }
+        .menu-item:hover, .menu-item.active { background: rgba(255,255,255,0.15); color: white; }
+        .main-content { margin-left: 260px; padding: 20px; }
+        .sensor-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; }
+        .sensor-value { font-size: 36px; font-weight: 700; color: var(--primary-green); }
+        .sensor-label { color: #666; font-size: 14px; }
+        .status-dry { background: linear-gradient(135deg, #ff9800, #f57c00); color: white; }
+        .status-optimal { background: linear-gradient(135deg, #4caf50, #2e7d32); color: white; }
+        .status-wet { background: linear-gradient(135deg, #2196f3, #1976d2); color: white; }
+        .alert-box { padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        .alert-warning { background: #fff3e0; border-left: 4px solid #ff9800; }
+        .alert-success { background: #e8f5e9; border-left: 4px solid #4caf50; }
+        .alert-danger { background: #ffebee; border-left: 4px solid #f44336; }
+        .moisture-bar { height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+        .moisture-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+        .nav-back { position: fixed; top: 20px; left: 20px; z-index: 1000; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <a href="smart-dashboard.html" class="btn btn-light nav-back">
+        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+    </a>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-leaf fa-lg"></i>
+            <span>Soil Monitor</span>
+        </div>
+        <div class="sidebar-menu">
+            <a class="menu-item active" onclick="showSection('dashboard')">
+                <i class="fas fa-tachometer-alt"></i><span data-i18n="dashboard">Dashboard</span>
+            </a>
+            <a class="menu-item" onclick="showSection('analysis')">
+                <i class="fas fa-chart-line"></i><span data-i18n="analysis">Analysis</span>
+            </a>
+            <a class="menu-item" onclick="showSection('alerts')">
+                <i class="fas fa-bell"></i><span data-i18n="alerts">Alerts</span>
+            </a>
+            <a class="menu-item" href="smart-dashboard.html">
+                <i class="fas fa-arrow-left"></i><span data-i18n="back">Back</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <h2 class="mb-4"><i class="fas fa-tint text-primary me-2"></i>Soil Moisture Monitoring</h2>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section">
+            <!-- Status Card -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="sensor-card p-4" id="statusCard">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <div class="sensor-value" id="avgMoisture">--%</div>
+                                <div class="sensor-label">Average Moisture</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="sensor-value" id="moistureStatus">--</div>
+                                <div class="sensor-label">Status</div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="sensor-value" id="irrigationEvents">--</div>
+                                <div class="sensor-label">Irrigation Events</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div id="alertsContainer" class="mb-4"></div>
+
+            <!-- Sensor Cards -->
+            <div class="row mb-4">
+                <div class="col-md-2 col-6 mb-3">
+                    <div class="sensor-card">
+                        <div class="sensor-value" id="sensor1">--</div>
+                        <div class="sensor-label">Sensor 1</div>
+                        <div class="moisture-bar mt-2">
+                            <div class="moisture-fill" id="bar1" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 col-6 mb-3">
+                    <div class="sensor-card">
+                        <div class="sensor-value" id="sensor2">--</div>
+                        <div class="sensor-label">Sensor 2</div>
+                        <div class="moisture-bar mt-2">
+                            <div class="moisture-fill" id="bar2" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 col-6 mb-3">
+                    <div class="sensor-card">
+                        <div class="sensor-value" id="sensor3">--</div>
+                        <div class="sensor-label">Sensor 3</div>
+                        <div class="moisture-bar mt-2">
+                            <div class="moisture-fill" id="bar3" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 col-6 mb-3">
+                    <div class="sensor-card">
+                        <div class="sensor-value" id="sensor4">--</div>
+                        <div class="sensor-label">Sensor 4</div>
+                        <div class="moisture-bar mt-2">
+                            <div class="moisture-fill" id="bar4" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 col-6 mb-3">
+                    <div class="sensor-card">
+                        <div class="sensor-value" id="sensor5">--</div>
+                        <div class="sensor-label">Sensor 5</div>
+                        <div class="moisture-bar mt-2">
+                            <div class="moisture-fill" id="bar5" style="width:0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2 col-6 mb-3">
+                    <div class="sensor-card">
+                        <div class="sensor-value" id="recommendation">--</div>
+                        <div class="sensor-label">Action</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="row">
+                <div class="col-md-8 mb-4">
+                    <div class="sensor-card">
+                        <h5>Soil Moisture Over Time</h5>
+                        <canvas id="moistureChart" height="150"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="sensor-card">
+                        <h5>Sensor Comparison</h5>
+                        <canvas id="comparisonChart" height="150"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Section -->
+        <div id="analysis-section" style="display:none;">
+            <div class="row">
+                <div class="col-md-12 mb-4">
+                    <div class="sensor-card">
+                        <h5>Detailed Statistics</h5>
+                        <div class="table-responsive mt-3">
+                            <table class="table" id="statsTable">
+                                <thead><tr><th>Sensor</th><th>Min</th><th>Avg</th><th>Max</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div id="alerts-section" style="display:none;">
+            <div class="sensor-card">
+                <h5>Irrigation Alerts</h5>
+                <div id="alertsList" class="mt-3"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let moistureChart, comparisonChart;
+
+        async function loadSoilData() {
+            try {
+                const res = await fetch('/api/soil-moisture/latest');
+                const data = await res.json();
+                
+                if (data.error) {
+                    document.getElementById('avgMoisture').textContent = 'No Data';
+                    return;
+                }
+
+                // Update sensor values
+                document.getElementById('sensor1').textContent = (data.moisture0 * 100).toFixed(0) + '%';
+                document.getElementById('sensor2').textContent = (data.moisture1 * 100).toFixed(0) + '%';
+                document.getElementById('sensor3').textContent = (data.moisture2 * 100).toFixed(0) + '%';
+                document.getElementById('sensor4').textContent = (data.moisture3 * 100).toFixed(0) + '%';
+                document.getElementById('sensor5').textContent = (data.moisture4 * 100).toFixed(0) + '%';
+
+                // Update bars
+                for (let i = 1; i <= 5; i++) {
+                    const val = data['moisture' + (i-1)] * 100;
+                    const bar = document.getElementById('bar' + i);
+                    bar.style.width = val + '%';
+                    bar.style.background = val < 30 ? '#f44336' : val > 60 ? '#2196f3' : '#4caf50';
+                }
+
+                // Update status
+                const avg = data.averageMoisture * 100;
+                document.getElementById('avgMoisture').textContent = avg.toFixed(0) + '%';
+                document.getElementById('moistureStatus').textContent = data.status;
+                document.getElementById('recommendation').textContent = data.irrigation === 1 ? 'ON' : 'OFF';
+
+                const statusCard = document.getElementById('statusCard');
+                statusCard.className = 'sensor-card p-4 ' + (avg < 30 ? 'status-dry' : avg > 60 ? 'status-wet' : 'status-optimal');
+
+                // Alerts
+                const alertsContainer = document.getElementById('alertsContainer');
+                if (data.alerts && data.alerts.length > 0) {
+                    alertsContainer.innerHTML = data.alerts.map(a => 
+                        `<div class="alert-box alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>${a}</div>`
+                    ).join('');
+                }
+
+                loadCharts();
+
+            } catch(e) {
+                console.error('Error:', e);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/soil-moisture/stats');
+                const data = await res.json();
+                
+                document.getElementById('irrigationEvents').textContent = data.irrigationEvents || 0;
+
+                const tbody = document.querySelector('#statsTable tbody');
+                tbody.innerHTML = `
+                    <tr><td>Sensor 1</td><td>${data.sensor1.min}</td><td>${data.sensor1.avg}</td><td>${data.sensor1.max}</td></tr>
+                    <tr><td>Sensor 2</td><td>${data.sensor2.min}</td><td>${data.sensor2.avg}</td><td>${data.sensor2.max}</td></tr>
+                    <tr><td>Sensor 3</td><td>${data.sensor3.min}</td><td>${data.sensor3.avg}</td><td>${data.sensor3.max}</td></tr>
+                    <tr><td>Sensor 4</td><td>${data.sensor4.min}</td><td>${data.sensor4.avg}</td><td>${data.sensor4.max}</td></tr>
+                    <tr><td>Sensor 5</td><td>${data.sensor5.min}</td><td>${data.sensor5.avg}</td><td>${data.sensor5.max}</td></tr>
+                `;
+
+            } catch(e) {
+                console.error('Error:', e);
+            }
+        }
+
+        async function loadCharts() {
+            try {
+                const res = await fetch('/api/soil-moisture');
+                const data = await res.json();
+                
+                if (!data.length) return;
+
+                const labels = data.slice(-24).map(d => d.time);
+                const s1 = data.slice(-24).map(d => d.moisture0 * 100);
+                const s2 = data.slice(-24).map(d => d.moisture1 * 100);
+                const s3 = data.slice(-24).map(d => d.moisture2 * 100);
+                const s4 = data.slice(-24).map(d => d.moisture3 * 100);
+                const s5 = data.slice(-24).map(d => d.moisture4 * 100);
+
+                // Line Chart
+                const ctx1 = document.getElementById('moistureChart').getContext('2d');
+                if (moistureChart) moistureChart.destroy();
+                moistureChart = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'S1', data: s1, borderColor: '#f44336', fill: false },
+                            { label: 'S2', data: s2, borderColor: '#2196f3', fill: false },
+                            { label: 'S3', data: s3, borderColor: '#4caf50', fill: false },
+                            { label: 'S4', data: s4, borderColor: '#ff9800', fill: false },
+                            { label: 'S5', data: s5, borderColor: '#9c27b0', fill: false }
+                        ]
+                    },
+                    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+                });
+
+                // Comparison Chart
+                const latest = data[data.length - 1];
+                const ctx2 = document.getElementById('comparisonChart').getContext('2d');
+                if (comparisonChart) comparisonChart.destroy();
+                comparisonChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: ['S1', 'S2', 'S3', 'S4', 'S5'],
+                        datasets: [{
+                            label: 'Current Moisture %',
+                            data: [latest.moisture0*100, latest.moisture1*100, latest.moisture2*100, latest.moisture3*100, latest.moisture4*100],
+                            backgroundColor: ['#f44336', '#2196f3', '#4caf50', '#ff9800', '#9c27b0']
+                        }]
+                    },
+                    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { max: 100 } } }
+                });
+
+            } catch(e) {
+                console.error('Chart error:', e);
+            }
+        }
+
+        function showSection(section) {
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            event.target.closest('.menu-item').classList.add('active');
+            
+            document.getElementById('dashboard-section').style.display = section === 'dashboard' ? 'block' : 'none';
+            document.getElementById('analysis-section').style.display = section === 'analysis' ? 'block' : 'none';
+            document.getElementById('alerts-section').style.display = section === 'alerts' ? 'block' : 'none';
+            
+            if (section === 'analysis') loadStats();
+            if (section === 'alerts') loadAlerts();
+        }
+
+        async function loadAlerts() {
+            try {
+                const res = await fetch('/api/soil-moisture');
+                const data = await res.json();
+                const alerts = data.filter(d => d.irrigation === 1);
+                
+                document.getElementById('alertsList').innerHTML = alerts.slice(-10).reverse().map(d => 
+                    `<div class="alert-box alert-warning mb-2"><i class="fas fa-tint me-2"></i>Irrigation at ${d.time} on ${d.date}</div>`
+                ).join('') || '<p>No irrigation events</p>';
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSoilData();
+            loadStats();
+        });
+    </script>
+</body>
+</html>

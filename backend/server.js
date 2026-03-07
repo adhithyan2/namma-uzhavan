@@ -1928,6 +1928,97 @@ async function seedLandRecords() {
 // Call seed function
 seedLandRecords();
 
+// ========================================
+// SOIL MOISTURE MONITORING APIs
+// ========================================
+
+// Load soil moisture dataset
+let soilMoistureData = [];
+function loadSoilMoistureData() {
+    try {
+        const csvPath = path.join(__dirname, 'data/soil_moisture.csv');
+        if (fs.existsSync(csvPath)) {
+            const data = fs.readFileSync(csvPath, 'utf-8');
+            const lines = data.split('\n').slice(1); // Skip header
+            soilMoistureData = lines.filter(line => line.trim()).map(line => {
+                const [year, month, day, hour, minute, second, moisture0, moisture1, moisture2, moisture3, moisture4, irrigation] = line.split(',');
+                return {
+                    date: `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`,
+                    time: `${hour.padStart(2,'0')}:${minute.padStart(2,'0')}`,
+                    moisture0: parseFloat(moisture0),
+                    moisture1: parseFloat(moisture1),
+                    moisture2: parseFloat(moisture2),
+                    moisture3: parseFloat(moisture3),
+                    moisture4: parseFloat(moisture4),
+                    irrigation: parseInt(irrigation)
+                };
+            });
+            console.log(`Loaded ${soilMoistureData.length} soil moisture records`);
+        }
+    } catch(e) {
+        console.log('No soil moisture data file found');
+    }
+}
+loadSoilMoistureData();
+
+// Get all soil moisture data
+app.get('/api/soil-moisture', (req, res) => {
+    res.json(soilMoistureData);
+});
+
+// Get latest soil moisture readings
+app.get('/api/soil-moisture/latest', (req, res) => {
+    if (soilMoistureData.length === 0) {
+        return res.json({ error: 'No data available' });
+    }
+    const latest = soilMoistureData[soilMoistureData.length - 1];
+    const avgMoisture = (latest.moisture0 + latest.moisture1 + latest.moisture2 + latest.moisture3 + latest.moisture4) / 5;
+    
+    let status = 'Optimal';
+    let recommendation = 'Soil moisture is good';
+    if (avgMoisture < 0.30) {
+        status = 'Dry - Irrigation Needed';
+        recommendation = 'Immediate irrigation recommended';
+    } else if (avgMoisture > 0.60) {
+        status = 'Too Wet';
+        recommendation = 'Avoid irrigation, check drainage';
+    }
+    
+    res.json({
+        ...latest,
+        averageMoisture: avgMoisture,
+        status,
+        recommendation,
+        alerts: avgMoisture < 0.30 ? ['⚠ Soil moisture critically low!'] : []
+    });
+});
+
+// Get moisture statistics
+app.get('/api/soil-moisture/stats', (req, res) => {
+    if (soilMoistureData.length === 0) {
+        return res.json({ error: 'No data available' });
+    }
+    
+    const moisture0 = soilMoistureData.map(d => d.moisture0);
+    const moisture1 = soilMoistureData.map(d => d.moisture1);
+    const moisture2 = soilMoistureData.map(d => d.moisture2);
+    const moisture3 = soilMoistureData.map(d => d.moisture3);
+    const moisture4 = soilMoistureData.map(d => d.moisture4);
+    
+    const avg = arr => arr.reduce((a,b) => a+b, 0) / arr.length;
+    const min = arr => Math.min(...arr);
+    const max = arr => Math.max(...arr);
+    
+    res.json({
+        sensor1: { avg: avg(moisture0).toFixed(2), min: min(moisture0).toFixed(2), max: max(moisture0).toFixed(2) },
+        sensor2: { avg: avg(moisture1).toFixed(2), min: min(moisture1).toFixed(2), max: max(moisture1).toFixed(2) },
+        sensor3: { avg: avg(moisture2).toFixed(2), min: min(moisture2).toFixed(2), max: max(moisture2).toFixed(2) },
+        sensor4: { avg: avg(moisture3).toFixed(2), min: min(moisture3).toFixed(2), max: max(moisture3).toFixed(2) },
+        sensor5: { avg: avg(moisture4).toFixed(2), min: min(moisture4).toFixed(2), max: max(moisture4).toFixed(2) },
+        irrigationEvents: soilMoistureData.filter(d => d.irrigation === 1).length
+    });
+});
+
 // Serve intro page at root
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/intro.html'));

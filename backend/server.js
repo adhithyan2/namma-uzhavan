@@ -13,6 +13,7 @@ const FarmerProfile = require('./models/FarmerProfile');
 const Product = require('./models/Product');
 const Dealer = require('./models/Dealer');
 const Farmer = require('./models/Farmer');
+const { LandRecord, SaleHistory, LandDocument } = require('./models/LandRecord');
 
 let farmers = [];
 
@@ -1740,6 +1741,192 @@ app.post('/api/test-verify', (req, res) => {
   console.log('TEST ENDPOINT:', req.body);
   res.json({ success: true, message: 'Test endpoint works!' });
 });
+
+// ========================================
+// LAND RECORD MANAGEMENT APIs
+// ========================================
+
+// Search land records
+app.get('/api/land-records/search', async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query) {
+      return res.status(400).json({ error: 'Search query required' });
+    }
+    
+    const results = await LandRecord.find({
+      $or: [
+        { surveyNumber: { $regex: query, $options: 'i' } },
+        { pattaNumber: { $regex: query, $options: 'i' } },
+        { ownerName: { $regex: query, $options: 'i' } }
+      ]
+    }).limit(20);
+    
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get single land record by ID
+app.get('/api/land-records/:id', async (req, res) => {
+  try {
+    const record = await LandRecord.findById(req.params.id);
+    if (!record) {
+      return res.status(404).json({ error: 'Land record not found' });
+    }
+    res.json(record);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get land record by survey number
+app.get('/api/land-records/by-survey/:surveyNumber', async (req, res) => {
+  try {
+    const record = await LandRecord.findOne({ surveyNumber: req.params.surveyNumber });
+    if (!record) {
+      return res.status(404).json({ error: 'Land record not found' });
+    }
+    
+    // Get sale history
+    const saleHistory = await SaleHistory.find({ surveyNumber: req.params.surveyNumber }).sort({ saleDate: -1 });
+    
+    // Get documents
+    const documents = await LandDocument.find({ surveyNumber: req.params.surveyNumber });
+    
+    res.json({ record, saleHistory, documents });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add new land record
+app.post('/api/land-records', async (req, res) => {
+  try {
+    const {
+      ownerName, aadhaarNumber, pattaNumber, surveyNumber,
+      village, taluk, district, landSize, landType,
+      currentCrop, guidelineValue, lastSalePrice, lastSaleDate
+    } = req.body;
+    
+    if (!ownerName || !pattaNumber || !surveyNumber) {
+      return res.status(400).json({ error: 'Owner name, patta number and survey number required' });
+    }
+    
+    const newRecord = new LandRecord({
+      ownerName, aadhaarNumber, pattaNumber, surveyNumber,
+      village, taluk, district, landSize, landType,
+      currentCrop, guidelineValue, lastSalePrice, lastSaleDate
+    });
+    
+    await newRecord.save();
+    res.json({ success: true, record: newRecord });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update land record
+app.put('/api/land-records/:id', async (req, res) => {
+  try {
+    const record = await LandRecord.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    res.json({ success: true, record });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete land record
+app.delete('/api/land-records/:id', async (req, res) => {
+  try {
+    await LandRecord.findByIdAndDelete(req.params.id);
+    await SaleHistory.deleteMany({ surveyNumber: req.params.surveyNumber });
+    await LandDocument.deleteMany({ surveyNumber: req.params.surveyNumber });
+    res.json({ success: true, message: 'Land record deleted' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add sale history
+app.post('/api/land-records/sale-history', async (req, res) => {
+  try {
+    const { surveyNumber, previousOwner, buyerName, saleAmount, saleDate } = req.body;
+    
+    const sale = new SaleHistory({ surveyNumber, previousOwner, buyerName, saleAmount, saleDate });
+    await sale.save();
+    res.json({ success: true, sale });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add document
+app.post('/api/land-records/documents', async (req, res) => {
+  try {
+    const { surveyNumber, documentType, fileName, filePath } = req.body;
+    
+    const doc = new LandDocument({ surveyNumber, documentType, fileName, filePath });
+    await doc.save();
+    res.json({ success: true, document: doc });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all land records (for admin)
+app.get('/api/land-records', async (req, res) => {
+  try {
+    const records = await LandRecord.find().sort({ createdAt: -1 });
+    res.json(records);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Seed sample land records
+async function seedLandRecords() {
+  try {
+    const count = await LandRecord.countDocuments();
+    if (count > 0) return;
+    
+    const sampleRecords = [
+      { ownerName: 'Ramasamy', aadhaarNumber: '123456789012', pattaNumber: 'PT/001/2020', surveyNumber: 'SY/101/001', village: 'Coimbatore', taluk: 'Coimbatore North', district: 'Coimbatore', landSize: '3.25', landType: 'Wet', currentCrop: 'Paddy', guidelineValue: 2500000, lastSalePrice: 1800000, lastSaleDate: new Date('2022-05-15') },
+      { ownerName: 'Kumarasamy', aadhaarNumber: '234567890123', pattaNumber: 'PT/002/2020', surveyNumber: 'SY/101/002', village: 'Coimbatore', taluk: 'Coimbatore North', district: 'Coimbatore', landSize: '2.50', landType: 'Dry', currentCrop: 'Groundnut', guidelineValue: 1800000, lastSalePrice: 1200000, lastSaleDate: new Date('2021-08-20') },
+      { ownerName: 'Palaniappan', aadhaarNumber: '345678901234', pattaNumber: 'PT/003/2020', surveyNumber: 'SY/102/001', village: 'Chittoor', taluk: 'Chittoor', district: 'Chittoor', landSize: '5.00', landType: 'Garden', currentCrop: 'Mango', guidelineValue: 5000000, lastSalePrice: 3500000, lastSaleDate: new Date('2023-01-10') },
+      { ownerName: 'Maruthamuthu', aadhaarNumber: '456789012345', pattaNumber: 'PT/004/2020', surveyNumber: 'SY/102/002', village: 'Chittoor', taluk: 'Chittoor', district: 'Chittoor', landSize: '1.75', landType: 'Wet', currentCrop: 'Sugarcane', guidelineValue: 2100000, lastSalePrice: 1500000, lastSaleDate: new Date('2022-11-25') },
+      { ownerName: 'Natarajan', aadhaarNumber: '567890123456', pattaNumber: 'PT/005/2020', surveyNumber: 'SY/103/001', village: 'Kallur', taluk: 'Kallur', district: 'Kadapa', landSize: '4.00', landType: 'Dry', currentCrop: 'Cotton', guidelineValue: 3200000, lastSalePrice: 2400000, lastSaleDate: new Date('2023-02-14') },
+      { ownerName: 'Venkatachalapathy', aadhaarNumber: '678901234567', pattaNumber: 'PT/006/2020', surveyNumber: 'SY/103/002', village: 'Kallur', taluk: 'Kallur', district: 'Kadapa', landSize: '2.25', landType: 'Garden', currentCrop: 'Banana', guidelineValue: 2800000, lastSalePrice: 2000000, lastSaleDate: new Date('2022-07-30') },
+      { ownerName: 'Srinivasan', aadhaarNumber: '789012345678', pattaNumber: 'PT/007/2020', surveyNumber: 'SY/104/001', village: 'Bangalore', taluk: 'Bangalore North', district: 'Bangalore', landSize: '1.00', landType: 'Dry', currentCrop: 'Ragi', guidelineValue: 15000000, lastSalePrice: 12000000, lastSaleDate: new Date('2023-03-05') },
+      { ownerName: 'Ravikumar', aadhaarNumber: '890123456789', pattaNumber: 'PT/008/2020', surveyNumber: 'SY/104/002', village: 'Bangalore', taluk: 'Bangalore South', district: 'Bangalore', landSize: '0.50', landType: 'Wet', currentCrop: 'Vegetables', guidelineValue: 8000000, lastSalePrice: 6500000, lastSaleDate: new Date('2022-09-12') },
+      { ownerName: 'Chinnasamy', aadhaarNumber: '901234567890', pattaNumber: 'PT/009/2020', surveyNumber: 'SY/105/001', village: 'Madurai', taluk: 'Madurai North', district: 'Madurai', landSize: '6.00', landType: 'Wet', currentCrop: 'Paddy', guidelineValue: 4200000, lastSalePrice: 3200000, lastSaleDate: new Date('2023-04-18') },
+      { ownerName: 'Thangaraj', aadhaarNumber: '012345678901', pattaNumber: 'PT/010/2020', surveyNumber: 'SY/105/002', village: 'Madurai', taluk: 'Madurai South', district: 'Madurai', landSize: '3.50', landType: 'Garden', currentCrop: 'Grapes', guidelineValue: 5500000, lastSalePrice: 4200000, lastSaleDate: new Date('2022-12-08') },
+      { ownerName: 'Muthusamy', aadhaarNumber: '112233445566', pattaNumber: 'PT/011/2020', surveyNumber: 'SY/106/001', village: 'Kochi', taluk: 'Kochi', district: 'Ernakulam', landSize: '2.00', landType: 'Wet', currentCrop: 'Paddy', guidelineValue: 6000000, lastSalePrice: 4800000, lastSaleDate: new Date('2023-01-22') },
+      { ownerName: 'Ponnusamy', aadhaarNumber: '223344556677', pattaNumber: 'PT/012/2020', surveyNumber: 'SY/106/002', village: 'Kochi', taluk: 'Kochi', district: 'Ernakulam', landSize: '1.50', landType: 'Garden', currentCrop: 'Coconut', guidelineValue: 4500000, lastSalePrice: 3600000, lastSaleDate: new Date('2022-10-15') },
+      { ownerName: 'Karuppannan', aadhaarNumber: '334455667788', pattaNumber: 'PT/013/2020', surveyNumber: 'SY/107/001', village: 'Hyderabad', taluk: 'Secunderabad', district: 'Hyderabad', landSize: '0.75', landType: 'Dry', currentCrop: 'Groundnut', guidelineValue: 12000000, lastSalePrice: 9500000, lastSaleDate: new Date('2023-02-28') },
+      { ownerName: 'Jayaraman', aadhaarNumber: '445566778899', pattaNumber: 'PT/014/2020', surveyNumber: 'SY/107/002', village: 'Hyderabad', taluk: 'Charminar', district: 'Hyderabad', landSize: '0.25', landType: 'Dry', currentCrop: 'Vegetables', guidelineValue: 8000000, lastSalePrice: 6500000, lastSaleDate: new Date('2022-08-05') },
+      { ownerName: 'Manickam', aadhaarNumber: '556677889900', pattaNumber: 'PT/015/2020', surveyNumber: 'SY/108/001', village: 'Thiruvananthapuram', taluk: 'Neyyattinkara', district: 'Thiruvananthapuram', landSize: '1.25', landType: 'Wet', currentCrop: 'Paddy', guidelineValue: 3500000, lastSalePrice: 2800000, lastSaleDate: new Date('2023-03-10') },
+      { ownerName: 'Vijayaraghavan', aadhaarNumber: '667788990011', pattaNumber: 'PT/016/2020', surveyNumber: 'SY/108/002', village: 'Thiruvananthapuram', taluk: 'Kollam', district: 'Thiruvananthapuram', landSize: '2.75', landType: 'Garden', currentCrop: 'Rubber', guidelineValue: 4800000, lastSalePrice: 3800000, lastSaleDate: new Date('2022-11-20') },
+      { ownerName: 'Narayanan', aadhaarNumber: '778899001122', pattaNumber: 'PT/017/2020', surveyNumber: 'SY/109/001', village: 'Mangalore', taluk: 'Mangalore North', district: 'Dakshina Kannada', landSize: '3.00', landType: 'Garden', currentCrop: 'Arecanut', guidelineValue: 7200000, lastSalePrice: 5600000, lastSaleDate: new Date('2023-01-30') },
+      { ownerName: 'Subramaniyan', aadhaarNumber: '889900112233', pattaNumber: 'PT/018/2020', surveyNumber: 'SY/109/002', village: 'Mangalore', taluk: 'Mangalore South', district: 'Dakshina Kannada', landSize: '4.50', landType: 'Wet', currentCrop: 'Paddy', guidelineValue: 6500000, lastSalePrice: 5000000, lastSaleDate: new Date('2022-06-25') },
+      { ownerName: 'Gopalakrishnan', aadhaarNumber: '990011223344', pattaNumber: 'PT/019/2020', surveyNumber: 'SY/110/001', village: 'Chennai', taluk: 'Chennai Central', district: 'Chennai', landSize: '0.35', landType: 'Dry', currentCrop: 'Vegetables', guidelineValue: 25000000, lastSalePrice: 20000000, lastSaleDate: new Date('2023-04-01') },
+      { ownerName: 'Balasubramaniam', aadhaarNumber: '001122334455', pattaNumber: 'PT/020/2020', surveyNumber: 'SY/110/002', village: 'Chennai', taluk: 'Chennai South', district: 'Chennai', landSize: '0.60', landType: 'Dry', currentCrop: 'Fruits', guidelineValue: 18000000, lastSalePrice: 14500000, lastSaleDate: new Date('2022-12-15') }
+    ];
+    
+    await LandRecord.insertMany(sampleRecords);
+    console.log('Sample land records seeded successfully');
+  } catch (error) {
+    console.log('Error seeding land records:', error.message);
+  }
+}
+
+// Call seed function
+seedLandRecords();
 
 // Serve intro page at root
 app.get('/', (req, res) => {

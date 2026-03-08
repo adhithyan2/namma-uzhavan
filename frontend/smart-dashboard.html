@@ -1118,7 +1118,7 @@
             if (data.recommendations && data.recommendations.length > 0) {
                 alertsBody.innerHTML = data.recommendations.map(rec => `
                     <div class="alert-item" style="padding:10px;border-left:4px solid ${rec.priority === 'High' ? '#f44336' : rec.priority === 'Medium' ? '#ff9800' : '#4caf50'};background:#f9f9f9;margin-bottom:10px;border-radius:5px;">
-                        <strong}>${rec.category</strong>
+                        <strong>${rec.category}</strong>
                         <p style="margin:5px 0 0 0;color:#666;">${rec.message}</p>
                     </div>
                 `).join('');

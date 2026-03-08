@@ -129,6 +129,7 @@
             <a class="menu-item" onclick="showPage('reports')"><i class="fas fa-file-alt"></i><span data-i18n="reports">Reports</span></a>
             <a class="menu-item" onclick="showPage('schemes')"><i class="fas fa-hand-holding-usd"></i><span data-i18n="schemes">Schemes</span></a>
             <a class="menu-item" href="soil-dashboard.html"><i class="fas fa-tint"></i><span data-i18n="soil_monitoring">Soil Monitoring</span></a>
+            <a class="menu-item" href="crop-health-map.html"><i class="fas fa-map-marked-alt"></i><span>Crop Health Map</span></a>
             <a class="menu-item" onclick="showProfilePage()"><i class="fas fa-user-circle"></i><span data-i18n="profile">Profile</span></a>
             <div style="height:1px;background:rgba(255,255,255,0.1);margin:15px 0"></div>
             <a class="menu-item" href="index.html"><i class="fas fa-sign-out-alt"></i><span data-i18n="logout">Logout</span></a>
@@ -168,6 +169,51 @@
                     <div class="stat-value" id="statLocation">Coimbatore</div>
                     <div class="stat-label" id="statDistrict">Tamil Nadu</div>
                 </div>
+                <div class="stat-card info">
+                    <div class="stat-icon" style="background:#e3f2fd;color:#2196f3"><i class="fas fa-thermometer-half"></i></div>
+                    <div class="stat-value" id="statTemp">32°C</div>
+                    <div class="stat-label" id="statWeather">Clear</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#fff3e0;color:#ff9800"><i class="fas fa-trophy"></i></div>
+                    <div class="stat-value" id="statCrop">Mango</div>
+                    <div class="stat-label" id="statScore">92% Match</div>
+                </div>
+                <div class="stat-card" id="statRiskCard">
+                    <div class="stat-icon" style="background:#ffebee;color:#f44336"><i class="fas fa-shield-alt"></i></div>
+                    <div class="stat-value" id="statRisk">Medium</div>
+                    <div class="stat-label" id="statRiskType">Drought Risk</div>
+                </div>
+            </div>
+
+            <!-- Soil Health NPK Cards -->
+            <div class="stats-grid" style="grid-template-columns: repeat(5, 1fr);">
+                <div class="stat-card" style="padding:15px;">
+                    <div class="stat-icon" style="background:#e8f5e9;width:35px;height:35px;"><i class="fas fa-flask"></i></div>
+                    <div class="stat-value" style="font-size:20px;" id="npkN">N: 60</div>
+                    <div class="stat-label">Nitrogen</div>
+                </div>
+                <div class="stat-card" style="padding:15px;">
+                    <div class="stat-icon" style="background:#fff3e0;width:35px;height:35px;"><i class="fas fa-flask"></i></div>
+                    <div class="stat-value" style="font-size:20px;" id="npkP">P: 55</div>
+                    <div class="stat-label">Phosphorus</div>
+                </div>
+                <div class="stat-card" style="padding:15px;">
+                    <div class="stat-icon" style="background:#f3e5f5;width:35px;height:35px;"><i class="fas fa-flask"></i></div>
+                    <div class="stat-value" style="font-size:20px;" id="npkK">K: 45</div>
+                    <div class="stat-label">Potassium</div>
+                </div>
+                <div class="stat-card" style="padding:15px;">
+                    <div class="stat-icon" style="background:#e0f2f1;width:35px;height:35px;"><i class="fas fa-vial"></i></div>
+                    <div class="stat-value" style="font-size:20px;" id="soilPh">pH: 6.5</div>
+                    <div class="stat-label">Soil pH</div>
+                </div>
+                <div class="stat-card" style="padding:15px;">
+                    <div class="stat-icon" style="background:#e3f2fd;width:35px;height:35px;"><i class="fas fa-tint"></i></div>
+                    <div class="stat-value" style="font-size:20px;" id="soilMoisture">45%</div>
+                    <div class="stat-label">Moisture</div>
+                </div>
+            </div>
                 <div class="stat-card info">
                     <div class="stat-icon" style="background:#e3f2fd;color:#2196f3"><i class="fas fa-thermometer-half"></i></div>
                     <div class="stat-value" id="statTemp">32°C</div>
@@ -977,37 +1023,104 @@
             const village = document.getElementById('villageSelect')?.value || 'Coimbatore';
             
             try {
-                // Get risk data
-                const res = await fetch(`/api/exact-risk?village=${village}`);
-                currentData = await res.json();
-                updateDashboard(currentData);
+                // Get complete weather data using new API
+                const weatherRes = await fetch(`/api/weather/current?city=${village}`);
+                const weatherData = await weatherRes.json();
+                
+                // Get crop recommendations using new API
+                const cropRes = await fetch('/api/crops?N=60&P=55&K=45&temperature=25&humidity=70&ph=6.5&rainfall=150');
+                const cropData = await cropRes.json();
+                
+                // Get AI Advisor recommendations
+                const advisorRes = await fetch('/api/ai-advisor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        soilMoisture: 0.45,
+                        temperature: weatherData.current?.temp || 25,
+                        humidity: weatherData.current?.humidity || 70,
+                        rainfall: weatherData.current?.rain || 0,
+                        ph: 6.5,
+                        language: localStorage.getItem('lang') || 'en'
+                    })
+                });
+                const advisorData = await advisorRes.json();
+                
+                // Get soil moisture data
+                try {
+                    const soilRes = await fetch('/api/soil-moisture/latest');
+                    const soilData = await soilRes.json();
+                    if (soilData) {
+                        const avgMoisture = ((soilData.moisture0 + soilData.moisture1 + soilData.moisture2 + soilData.moisture3 + soilData.moisture4) / 5 * 100).toFixed(0);
+                        document.getElementById('soilMoisture').textContent = avgMoisture + '%';
+                    }
+                } catch(e) { console.log('Soil data not available'); }
+                
+                // Update dashboard with new data
+                updateDashboard(weatherData, cropData);
+                updateAIAdvisor(advisorData);
                 
                 // Get forecast for charts
-                const forecastRes = await fetch(`/api/forecast?location=${village}`);
+                const forecastRes = await fetch(`/api/weather/forecast?city=${village}&days=7`);
                 const forecastData = await forecastRes.json();
-                loadCharts(currentData, forecastData);
+                loadCharts(weatherData, forecastData);
             } catch(e) {
                 console.log('Error:', e);
-                document.getElementById('statLocation').textContent = 'Loading...';
+                // Fallback to old API
+                try {
+                    const res = await fetch(`/api/exact-risk?village=${village}`);
+                    currentData = await res.json();
+                    updateDashboard(currentData, []);
+                } catch(e2) {
+                    document.getElementById('statLocation').textContent = 'Loading...';
+                }
             }
         }
 
-        function updateDashboard(data) {
-            document.getElementById('statLocation').textContent = data.location || 'Coimbatore';
-            document.getElementById('statDistrict').textContent = data.region || 'Tamil Nadu';
-            document.getElementById('statTemp').textContent = Math.round(data.temperature) + '°C';
-            document.getElementById('statWeather').textContent = data.condition || 'Clear';
-            document.getElementById('statCrop').textContent = data.topCrops?.[0]?.crop || 'Mango';
-            document.getElementById('statScore').textContent = (data.topCrops?.[0]?.score || 92) + '% Match';
+        function updateDashboard(weatherData, cropData) {
+            const current = weatherData.current || {};
+            document.getElementById('statLocation').textContent = current.city || 'Coimbatore';
+            document.getElementById('statDistrict').textContent = current.country || 'India';
+            document.getElementById('statTemp').textContent = current.temp + '°C';
+            document.getElementById('statWeather').textContent = current.condition || 'Clear';
             
-            const riskLevel = data.riskLevel || 'Medium';
-            document.getElementById('statRisk').textContent = riskLevel;
-            document.getElementById('statRiskType').textContent = data.risks?.[0]?.type || 'Normal';
-            document.getElementById('statRiskCard').className = `stat-card ${riskLevel === 'High' ? 'danger' : riskLevel === 'Medium' ? 'warning' : ''}`;
+            // Update from crop data
+            const topCrop = cropData[0] || {};
+            document.getElementById('statCrop').textContent = topCrop.crop || 'Rice';
+            document.getElementById('statScore').textContent = Math.round((topCrop.probability || 0.92) * 100) + '% Match';
+            
+            document.getElementById('weatherTemp').textContent = current.temp + '°C';
+            document.getElementById('weatherCondition').textContent = current.description || 'Clear Sky';
+            document.getElementById('weatherLocation').textContent = `${current.city}, ${current.country}`;
+            document.getElementById('weatherHumidity').textContent = current.humidity + '%';
+            document.getElementById('weatherWind').textContent = current.wind + ' m/s';
+            document.getElementById('weatherRain').textContent = current.rain + '%';
+            document.getElementById('weatherPressure').textContent = current.pressure + ' hPa';
+            
+            // Update crop table
+            const tbody = document.getElementById('cropTableBody');
+            tbody.innerHTML = cropData.slice(0, 5).map(crop => `
+                <tr>
+                    <td>${crop.crop}</td>
+                    <td><span class="badge bg-success">${Math.round(crop.probability * 100)}%</span></td>
+                    <td>₹${crop.profit || '50,000'}</td>
+                    <td><span class="badge bg-warning">Low</span></td>
+                </tr>
+            `).join('');
+        }
 
-            document.getElementById('weatherTemp').textContent = Math.round(data.temperature) + '°C';
-            document.getElementById('weatherCondition').textContent = data.condition || 'Clear Sky';
-            document.getElementById('weatherLocation').textContent = `${data.location}, ${data.region}`;
+        function updateAIAdvisor(data) {
+            const alertsBody = document.getElementById('alertsBody');
+            if (data.recommendations && data.recommendations.length > 0) {
+                alertsBody.innerHTML = data.recommendations.map(rec => `
+                    <div class="alert-item" style="padding:10px;border-left:4px solid ${rec.priority === 'High' ? '#f44336' : rec.priority === 'Medium' ? '#ff9800' : '#4caf50'};background:#f9f9f9;margin-bottom:10px;border-radius:5px;">
+                        <strong}>${rec.category</strong>
+                        <p style="margin:5px 0 0 0;color:#666;">${rec.message}</p>
+                    </div>
+                `).join('');
+            } else {
+                alertsBody.innerHTML = '<p class="text-muted">All conditions are optimal! ✓</p>';
+            }
         }
 
         function loadCharts(data, forecast) {

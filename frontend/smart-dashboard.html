@@ -768,15 +768,43 @@
         });
 
         function showPage(page) {
+            // Hide all pages first
+            document.querySelectorAll('.page-section').forEach(p => {
+                p.classList.remove('active');
+                p.style.display = 'none';
+            });
+            
+            // Remove active from all menu items
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
-            document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
             
-            event.target.closest('.menu-item').classList.add('active');
-            document.getElementById('page-' + page).classList.add('active');
+            // Add active to clicked menu item
+            if (event && event.target) {
+                const menuItem = event.target.closest('.menu-item');
+                if (menuItem) menuItem.classList.add('active');
+            }
             
-            const titles = { dashboard: smartT('dashboard'), location: smartT('select_location'), crops: smartT('crop_suggestions'), weather: smartT('weather'), alerts: smartT('risk_alerts'), reports: smartT('reports'), advisory: smartT('crop_advisory'), schemes: smartT('schemes'), profile: smartT('profile') };
+            // Show selected page
+            const selectedPage = document.getElementById('page-' + page);
+            if (selectedPage) {
+                selectedPage.classList.add('active');
+                selectedPage.style.display = 'block';
+            }
+            
+            // Update title
+            const titles = { 
+                dashboard: smartT('dashboard'), 
+                location: smartT('select_location'), 
+                crops: smartT('crop_suggestions'), 
+                weather: smartT('weather'), 
+                alerts: smartT('risk_alerts'), 
+                reports: smartT('reports'), 
+                advisory: smartT('crop_advisory'), 
+                schemes: smartT('schemes'), 
+                profile: smartT('profile') 
+            };
             document.getElementById('pageTitle').textContent = titles[page] || page;
             
+            // Load page-specific data
             if(page === 'weather') loadWeatherForecast();
             if(page === 'crops') loadCrops();
             if(page === 'location') refreshAgents();

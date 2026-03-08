@@ -846,7 +846,7 @@
                     <strong>${data.location}, ${data.region}</strong><br>
                     Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}
                 `;
-                localStorage.setItem('farmLocation', JSON.stringify({village:data.location, latitude:lat, longitude:lon, state:data.region}));
+                localStorage.setItem('farmLocation', JSON.stringify({village:data.location, latitude:lat, longitude:lon, state:data.region});
                 loadAllData();
             } catch(e) { console.log(e); }
         }
@@ -882,7 +882,7 @@
             
             // Calculate distance and sort by nearest
             const agentsWithDistance = boothAgents.map(agent => {
-                const distance = Math.sqrt(Math.pow(agent.lat - lat, 2) + Math.pow(agent.lng - lng, 2)) * 111;
+                const distance = Math.sqrt(Math.pow(agent.lat - lat, 2) + Math.pow(agent.lng - lng, 2) * 111;
                 return { ...agent, distance: distance.toFixed(1) };
             }).sort((a, b) => a.distance - b.distance).slice(0, 6);
 

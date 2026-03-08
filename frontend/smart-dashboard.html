@@ -1024,12 +1024,14 @@
             
             try {
                 // Get complete weather data using new API
-                const weatherRes = await fetch(`/api/weather/current?city=${village}`);
-                const weatherData = await weatherRes.json();
+                const weatherRes = await fetch(`/api/weather?city=${village}`);
+                const weatherApiData = await weatherRes.json();
+                const weatherData = { current: weatherApiData };
                 
                 // Get crop recommendations using new API
                 const cropRes = await fetch('/api/crops?N=60&P=55&K=45&temperature=25&humidity=70&ph=6.5&rainfall=150');
-                const cropData = await cropRes.json();
+                const cropApiData = await cropRes.json();
+                const cropData = Array.isArray(cropApiData) ? cropApiData : (cropApiData.recommendations || []);
                 
                 // Get AI Advisor recommendations
                 const advisorRes = await fetch('/api/ai-advisor', {
@@ -1062,7 +1064,8 @@
                 
                 // Get forecast for charts
                 const forecastRes = await fetch(`/api/weather/forecast?city=${village}&days=7`);
-                const forecastData = await forecastRes.json();
+                const forecastApiData = await forecastRes.json();
+                const forecastData = { forecast: forecastApiData.forecast || [] };
                 loadCharts(weatherData, forecastData);
             } catch(e) {
                 console.log('Error:', e);
@@ -1081,28 +1084,29 @@
             const current = weatherData.current || {};
             document.getElementById('statLocation').textContent = current.city || 'Coimbatore';
             document.getElementById('statDistrict').textContent = current.country || 'India';
-            document.getElementById('statTemp').textContent = current.temp + '°C';
+            document.getElementById('statTemp').textContent = (current.temp || 25) + '°C';
             document.getElementById('statWeather').textContent = current.condition || 'Clear';
             
-            // Update from crop data
-            const topCrop = cropData[0] || {};
+            // Update from crop data - handle both old and new format
+            const cropsArray = Array.isArray(cropData) ? cropData : (cropData.recommendations || []);
+            const topCrop = cropsArray[0] || {};
             document.getElementById('statCrop').textContent = topCrop.crop || 'Rice';
-            document.getElementById('statScore').textContent = Math.round((topCrop.probability || 0.92) * 100) + '% Match';
+            document.getElementById('statScore').textContent = Math.round((topCrop.probability || topCrop.score || 0.92) * 100) + '% Match';
             
-            document.getElementById('weatherTemp').textContent = current.temp + '°C';
+            document.getElementById('weatherTemp').textContent = (current.temp || 25) + '°C';
             document.getElementById('weatherCondition').textContent = current.description || 'Clear Sky';
-            document.getElementById('weatherLocation').textContent = `${current.city}, ${current.country}`;
-            document.getElementById('weatherHumidity').textContent = current.humidity + '%';
-            document.getElementById('weatherWind').textContent = current.wind + ' m/s';
-            document.getElementById('weatherRain').textContent = current.rain + '%';
-            document.getElementById('weatherPressure').textContent = current.pressure + ' hPa';
+            document.getElementById('weatherLocation').textContent = `${current.city || 'Coimbatore'}, ${current.country || 'India'}`;
+            document.getElementById('weatherHumidity').textContent = (current.humidity || 70) + '%';
+            document.getElementById('weatherWind').textContent = (current.wind || 5) + ' m/s';
+            document.getElementById('weatherRain').textContent = (current.rain || 0) + '%';
+            document.getElementById('weatherPressure').textContent = (current.pressure || 1013) + ' hPa';
             
             // Update crop table
             const tbody = document.getElementById('cropTableBody');
-            tbody.innerHTML = cropData.slice(0, 5).map(crop => `
+            tbody.innerHTML = cropsArray.slice(0, 5).map(crop => `
                 <tr>
                     <td>${crop.crop}</td>
-                    <td><span class="badge bg-success">${Math.round(crop.probability * 100)}%</span></td>
+                    <td><span class="badge bg-success">${Math.round((crop.probability || crop.score || 0.9) * 100)}%</span></td>
                     <td>₹${crop.profit || '50,000'}</td>
                     <td><span class="badge bg-warning">Low</span></td>
                 </tr>
@@ -1124,10 +1128,11 @@
         }
 
         function loadCharts(data, forecast) {
-            // Use forecast data if available, otherwise use defaults
-            const days = forecast?.forecasts?.slice(0,7).map(f => f.date?.split('-').slice(1).join('/')) || ['Today','Tomorrow','Day 3','Day 4','Day 5','Day 6','Day 7'];
-            const temps = forecast?.forecasts?.slice(0,7).map(f => Math.round(f.temperature)) || [Math.round(data.temperature), Math.round(data.temperature)+1, Math.round(data.temperature)+2, Math.round(data.temperature), Math.round(data.temperature)-1, Math.round(data.temperature)-2, Math.round(data.temperature)-1];
-            const rain = forecast?.forecasts?.slice(0,7).map(f => f.humidity) || [20,10,65,80,30,15,25];
+            // Use new API format: forecast.forecast (array)
+            const forecastArray = forecast?.forecast || forecast?.forecasts || [];
+            const days = forecastArray.length > 0 ? forecastArray.map(f => f.day || f.date?.split('-').slice(1).join('/')) : ['Today','Tomorrow','Day 3','Day 4','Day 5','Day 6','Day 7'];
+            const temps = forecastArray.length > 0 ? forecastArray.map(f => f.temp?.max || f.temperature || 25) : [25,26,27,26,25,24,23];
+            const rain = forecastArray.length > 0 ? forecastArray.map(f => f.rainProbability || f.rain || 20) : [20,10,65,80,30,15,25];
             
             // Temperature Chart
             const tempCtx = document.getElementById('tempChart')?.getContext('2d');
@@ -1140,7 +1145,7 @@
                 });
             }
 
-            // Rain Chart
+            // Rain Chart  
             const rainCtx = document.getElementById('rainChart')?.getContext('2d');
             if(rainCtx) {
                 if(rainChart) rainChart.destroy();
@@ -1166,10 +1171,10 @@
             const cropCtx = document.getElementById('cropChart')?.getContext('2d');
             if(cropCtx) {
                 if(cropChart) cropChart.destroy();
-                const crops = data.topCrops?.slice(0,5) || [{crop:'Mango',score:79},{crop:'Pigeonpeas',score:65},{crop:'Blackgram',score:61},{crop:'Cotton',score:58},{crop:'Rice',score:52}];
+                const crops = data?.recommendations?.slice(0,5) || [{crop:'Rice',probability:0.85},{crop:'Maize',probability:0.72},{crop:'Cotton',probability:0.68},{crop:'Sugarcane',probability:0.62},{crop:'Wheat',probability:0.55}];
                 cropChart = new Chart(cropCtx, {
                     type: 'bar',
-                    data: { labels: crops.map(c=>c.crop), datasets: [{ label: 'Suitability %', data: crops.map(c=>c.score), backgroundColor: ['#4caf50','#8bc34a','#cddc39','#ffeb3b','#2196f3'], borderRadius: 5 }] },
+                    data: { labels: crops.map(c=>c.crop), datasets: [{ label: 'Suitability %', data: crops.map(c=>Math.round(c.probability * 100)), backgroundColor: ['#4caf50','#8bc34a','#cddc39','#ffeb3b','#2196f3'], borderRadius: 5 }] },
                     options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 } } }
                 });
             }

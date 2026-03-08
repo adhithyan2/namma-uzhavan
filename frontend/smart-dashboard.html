@@ -1022,40 +1022,113 @@
         async function loadAllData() {
             const village = document.getElementById('villageSelect')?.value || 'Coimbatore';
             
+            console.log('Loading data for:', village);
+            
+            // Default data for charts
+            const defaultWeatherData = {
+                current: { temp: 28, humidity: 65, wind: 5, rain: 10, pressure: 1013, condition: 'Clear', city: village, country: 'India' }
+            };
+            const defaultCropData = [
+                { crop: 'Rice', probability: 0.85, profit: '55000' },
+                { crop: 'Maize', probability: 0.72, profit: '45000' },
+                { crop: 'Cotton', probability: 0.68, profit: '65000' },
+                { crop: 'Sugarcane', probability: 0.62, profit: '80000' },
+                { crop: 'Wheat', probability: 0.55, profit: '40000' }
+            ];
+            const defaultForecastData = {
+                forecast: [
+                    { day: 'Mon', temp: { max: 28 }, rainProbability: 10 },
+                    { day: 'Tue', temp: { max: 30 }, rainProbability: 20 },
+                    { day: 'Wed', temp: { max: 32 }, rainProbability: 65 },
+                    { day: 'Thu', temp: { max: 29 }, rainProbability: 80 },
+                    { day: 'Fri', temp: { max: 27 }, rainProbability: 45 },
+                    { day: 'Sat', temp: { max: 25 }, rainProbability: 15 },
+                    { day: 'Sun', temp: { max: 26 }, rainProbability: 25 }
+                ]
+            };
+            
             try {
-                // Get complete weather data using new API
-                const weatherRes = await fetch(`/api/weather?city=${village}`);
-                const weatherApiData = await weatherRes.json();
-                const weatherData = { current: weatherApiData };
+                // Get weather data
+                const weatherRes = await fetch(`/api/weather?city=${village}`).catch(e => null);
+                let weatherData = defaultWeatherData;
+                if (weatherRes && weatherRes.ok) {
+                    const weatherApiData = await weatherRes.json();
+                    if (weatherApiData && weatherApiData.current) {
+                        weatherData = { current: weatherApiData.current };
+                        console.log('Weather loaded:', weatherData.current);
+                    }
+                }
                 
-                // Get crop recommendations using new API
-                const cropRes = await fetch('/api/crops?N=60&P=55&K=45&temperature=25&humidity=70&ph=6.5&rainfall=150');
-                const cropApiData = await cropRes.json();
-                const cropData = Array.isArray(cropApiData) ? cropApiData : (cropApiData.recommendations || []);
+                // Get crop recommendations
+                const cropRes = await fetch('/api/crops?N=60&P=55&K=45&temperature=25&humidity=70&ph=6.5&rainfall=150').catch(e => null);
+                let cropData = defaultCropData;
+                if (cropRes && cropRes.ok) {
+                    const cropApiData = await cropRes.json();
+                    if (cropApiData && cropApiData.length > 0) {
+                        cropData = cropApiData.slice(0, 5);
+                    } else if (cropApiData && cropApiData.recommendations) {
+                        cropData = cropApiData.recommendations.slice(0, 5);
+                    }
+                }
+                console.log('Crops loaded:', cropData.length);
                 
-                // Get AI Advisor recommendations
-                const advisorRes = await fetch('/api/ai-advisor', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        soilMoisture: 0.45,
-                        temperature: weatherData.current?.temp || 25,
-                        humidity: weatherData.current?.humidity || 70,
-                        rainfall: weatherData.current?.rain || 0,
-                        ph: 6.5,
-                        language: localStorage.getItem('lang') || 'en'
-                    })
-                });
-                const advisorData = await advisorRes.json();
+                // Update dashboard
+                updateDashboard(weatherData, cropData);
                 
-                // Get soil moisture data
+                // Try AI Advisor
+                try {
+                    const advisorRes = await fetch('/api/ai-advisor', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            soilMoisture: 0.45,
+                            temperature: weatherData.current?.temp || 25,
+                            humidity: weatherData.current?.humidity || 70,
+                            rainfall: weatherData.current?.rain || 0,
+                            ph: 6.5,
+                            language: localStorage.getItem('lang') || 'en'
+                        })
+                    });
+                    if (advisorRes.ok) {
+                        const advisorData = await advisorRes.json();
+                        updateAIAdvisor(advisorData);
+                    }
+                } catch(e) { console.log('AI Advisor not available'); }
+                
+                // Get forecast for charts
+                const forecastRes = await fetch(`/api/weather/forecast?city=${village}&days=7`).catch(e => null);
+                let forecastData = defaultForecastData;
+                if (forecastRes && forecastRes.ok) {
+                    const forecastApiData = await forecastRes.json();
+                    if (forecastApiData && forecastApiData.forecast) {
+                        forecastData = { forecast: forecastApiData.forecast };
+                        console.log('Forecast loaded:', forecastData.forecast.length, 'days');
+                    }
+                }
+                
+                // Load charts with data
+                loadCharts(weatherData, forecastData, cropData);
+                
+                // Update soil moisture if available
                 try {
                     const soilRes = await fetch('/api/soil-moisture/latest');
-                    const soilData = await soilRes.json();
-                    if (soilData) {
-                        const avgMoisture = ((soilData.moisture0 + soilData.moisture1 + soilData.moisture2 + soilData.moisture3 + soilData.moisture4) / 5 * 100).toFixed(0);
-                        document.getElementById('soilMoisture').textContent = avgMoisture + '%';
+                    if (soilRes.ok) {
+                        const soilData = await soilRes.json();
+                        if (soilData && soilData.moisture0 !== undefined) {
+                            const avgMoisture = ((soilData.moisture0 + soilData.moisture1 + soilData.moisture2 + soilData.moisture3 + soilData.moisture4) / 5 * 100).toFixed(0);
+                            document.getElementById('soilMoisture').textContent = avgMoisture + '%';
+                        }
                     }
+                } catch(e) { console.log('Soil data not available'); }
+                
+                console.log('All data loaded successfully!');
+            } catch(e) {
+                console.log('Error loading data:', e);
+                // Load with defaults
+                updateDashboard(defaultWeatherData, defaultCropData);
+                loadCharts(defaultWeatherData, defaultForecastData, defaultCropData);
+            }
+        }
                 } catch(e) { console.log('Soil data not available'); }
                 
                 // Update dashboard with new data
@@ -1127,73 +1200,127 @@
             }
         }
 
-        function loadCharts(data, forecast) {
+        function loadCharts(weatherData, forecastData, cropData) {
+            console.log('loadCharts called with cropData:', cropData);
+            
             // Default fallback data
             const defaultDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
             const defaultTemps = [28, 30, 32, 29, 27, 25, 26];
             const defaultRain = [10, 20, 65, 80, 45, 15, 25];
             
-            // Use new API format: forecast.forecast (array)
-            const forecastArray = forecast?.forecast || forecast?.forecasts || [];
+            // Use API forecast data or fallback
+            const forecastArray = forecastData?.forecast || [];
             const days = forecastArray.length > 0 ? forecastArray.map(f => f.day || f.date?.split('-').slice(1).join('/')) : defaultDays;
             const temps = forecastArray.length > 0 ? forecastArray.map(f => f.temp?.max || f.temperature || 25) : defaultTemps;
             const rain = forecastArray.length > 0 ? forecastArray.map(f => f.rainProbability || f.rain || 20) : defaultRain;
             
-            // Delay to ensure DOM is ready
-            setTimeout(() => {
-                // Temperature Chart
-                const tempCanvas = document.getElementById('tempChart');
-                if(tempCanvas) {
-                    const tempCtx = tempCanvas.getContext('2d');
-                    if(tempCtx) {
-                        new Chart(tempCtx, {
-                            type: 'line',
-                            data: { labels: days, datasets: [{ label: 'Temp (°C)', data: temps, borderColor: '#f44336', backgroundColor: 'rgba(244,67,54,0.1)', fill: true, tension: 0.4 }] },
-                            options: { responsive: true, maintainAspectRatio: false }
-                        });
-                    }
+            console.log('Chart days:', days, 'temps:', temps);
+            
+            // Destroy existing charts if they exist
+            if (window.tempChartInstance) { window.tempChartInstance.destroy(); }
+            if (window.rainChartInstance) { window.rainChartInstance.destroy(); }
+            if (window.riskChartInstance) { window.riskChartInstance.destroy(); }
+            if (window.cropChartInstance) { window.cropChartInstance.destroy(); }
+            
+            // Temperature Chart
+            const tempCanvas = document.getElementById('tempChart');
+            if (tempCanvas) {
+                const tempCtx = tempCanvas.getContext('2d');
+                if (tempCtx) {
+                    window.tempChartInstance = new Chart(tempCtx, {
+                        type: 'line',
+                        data: { 
+                            labels: days, 
+                            datasets: [{ 
+                                label: 'Temp (°C)', 
+                                data: temps, 
+                                borderColor: '#f44336', 
+                                backgroundColor: 'rgba(244,67,54,0.1)', 
+                                fill: true, 
+                                tension: 0.4 
+                            }] 
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    console.log('Temperature chart created');
                 }
+            }
 
-                // Rain Chart  
-                const rainCanvas = document.getElementById('rainChart');
-                if(rainCanvas) {
-                    const rainCtx = rainCanvas.getContext('2d');
-                    if(rainCtx) {
-                        new Chart(rainCtx, {
-                            type: 'bar',
-                            data: { labels: days, datasets: [{ label: 'Rain %', data: rain, backgroundColor: '#2196f3', borderRadius: 5 }] },
-                            options: { responsive: true, maintainAspectRatio: false }
-                        });
-                    }
+            // Rain Chart  
+            const rainCanvas = document.getElementById('rainChart');
+            if (rainCanvas) {
+                const rainCtx = rainCanvas.getContext('2d');
+                if (rainCtx) {
+                    window.rainChartInstance = new Chart(rainCtx, {
+                        type: 'bar',
+                        data: { 
+                            labels: days, 
+                            datasets: [{ 
+                                label: 'Rain %', 
+                                data: rain, 
+                                backgroundColor: '#2196f3', 
+                                borderRadius: 5 
+                            }] 
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    console.log('Rain chart created');
                 }
+            }
 
-                // Risk Radar
-                const riskCanvas = document.getElementById('riskChart');
-                if(riskCanvas) {
-                    const riskCtx = riskCanvas.getContext('2d');
-                    if(riskCtx) {
-                        new Chart(riskCtx, {
-                            type: 'radar',
-                            data: { labels: ['Heat','Drought','Flood','Pest','Wind'], datasets: [{ label: 'Risk', data: [65,75,20,45,30], backgroundColor: 'rgba(255,152,0,0.2)', borderColor: '#ff9800' }] },
-                            options: { responsive: true, maintainAspectRatio: false }
-                        });
-                    }
+            // Risk Radar
+            const riskCanvas = document.getElementById('riskChart');
+            if (riskCanvas) {
+                const riskCtx = riskCanvas.getContext('2d');
+                if (riskCtx) {
+                    window.riskChartInstance = new Chart(riskCtx, {
+                        type: 'radar',
+                        data: { 
+                            labels: ['Heat','Drought','Flood','Pest','Wind'], 
+                            datasets: [{ 
+                                label: 'Risk', 
+                                data: [65,75,20,45,30], 
+                                backgroundColor: 'rgba(255,152,0,0.2)', 
+                                borderColor: '#ff9800' 
+                            }] 
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    console.log('Risk chart created');
                 }
+            }
 
-                // Crop Comparison
-                const cropCanvas = document.getElementById('cropChart');
-                if(cropCanvas) {
-                    const cropCtx = cropCanvas.getContext('2d');
-                    if(cropCtx) {
-                        const crops = data?.recommendations?.slice(0,5) || [{crop:'Rice',probability:0.85},{crop:'Maize',probability:0.72},{crop:'Cotton',probability:0.68},{crop:'Sugarcane',probability:0.62},{crop:'Wheat',probability:0.55}];
-                        new Chart(cropCtx, {
-                            type: 'bar',
-                            data: { labels: crops.map(c=>c.crop), datasets: [{ label: 'Suitability %', data: crops.map(c=>Math.round(c.probability * 100)), backgroundColor: '#4caf50', borderRadius: 5 }] },
-                            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
-                        });
-                    }
+            // Crop Comparison
+            const cropCanvas = document.getElementById('cropChart');
+            const crops = cropData && cropData.length > 0 ? cropData : [
+                {crop:'Rice',probability:0.85},
+                {crop:'Maize',probability:0.72},
+                {crop:'Cotton',probability:0.68},
+                {crop:'Sugarcane',probability:0.62},
+                {crop:'Wheat',probability:0.55}
+            ];
+            
+            if (cropCanvas) {
+                const cropCtx = cropCanvas.getContext('2d');
+                if (cropCtx) {
+                    window.cropChartInstance = new Chart(cropCtx, {
+                        type: 'bar',
+                        data: { 
+                            labels: crops.map(c=>c.crop), 
+                            datasets: [{ 
+                                label: 'Suitability %', 
+                                data: crops.map(c=>Math.round((c.probability || 0.5) * 100)), 
+                                backgroundColor: '#4caf50', 
+                                borderRadius: 5 
+                            }] 
+                        },
+                        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+                    });
+                    console.log('Crop chart created');
                 }
-            }, 500);
+            }
+            
+            console.log('All charts loaded!');
         }
 
         async function loadCrops() {

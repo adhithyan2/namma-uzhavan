@@ -1139,58 +1139,61 @@
             const temps = forecastArray.length > 0 ? forecastArray.map(f => f.temp?.max || f.temperature || 25) : defaultTemps;
             const rain = forecastArray.length > 0 ? forecastArray.map(f => f.rainProbability || f.rain || 20) : defaultRain;
             
-            console.log('Loading charts with days:', days, 'temps:', temps, 'rain:', rain);
-            
-            // Temperature Chart
-            const tempCtx = document.getElementById('tempChart');
-            if(tempCtx && tempCtx.getContext) {
-                if(window.tempChart) window.tempChart.destroy();
-                window.tempChart = new Chart(tempCtx.getContext('2d'), {
-                    type: 'line',
-                    data: { labels: days, datasets: [{ label: 'Temp (°C)', data: temps, borderColor: '#f44336', backgroundColor: 'rgba(244,67,54,0.1)', fill: true, tension: 0.4 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-                });
-                console.log('Temperature chart created');
-            }
+            // Delay to ensure DOM is ready
+            setTimeout(() => {
+                // Temperature Chart
+                const tempCanvas = document.getElementById('tempChart');
+                if(tempCanvas) {
+                    const tempCtx = tempCanvas.getContext('2d');
+                    if(tempCtx) {
+                        new Chart(tempCtx, {
+                            type: 'line',
+                            data: { labels: days, datasets: [{ label: 'Temp (°C)', data: temps, borderColor: '#f44336', backgroundColor: 'rgba(244,67,54,0.1)', fill: true, tension: 0.4 }] },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    }
+                }
 
-            // Rain Chart  
-            const rainCtx = document.getElementById('rainChart');
-            if(rainCtx && rainCtx.getContext) {
-                if(window.rainChart) window.rainChart.destroy();
-                window.rainChart = new Chart(rainCtx.getContext('2d'), {
-                    type: 'bar',
-                    data: { labels: days, datasets: [{ label: 'Rain %', data: rain, backgroundColor: rain.map(r => r>50?'#2196f3':'#bbdefb'), borderRadius: 5 }] },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { max: 100 } } }
-                });
-                console.log('Rain chart created');
-            }
+                // Rain Chart  
+                const rainCanvas = document.getElementById('rainChart');
+                if(rainCanvas) {
+                    const rainCtx = rainCanvas.getContext('2d');
+                    if(rainCtx) {
+                        new Chart(rainCtx, {
+                            type: 'bar',
+                            data: { labels: days, datasets: [{ label: 'Rain %', data: rain, backgroundColor: '#2196f3', borderRadius: 5 }] },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    }
+                }
 
-            // Risk Radar
-            const riskCtx = document.getElementById('riskChart');
-            if(riskCtx && riskCtx.getContext) {
-                if(window.riskChart) window.riskChart.destroy();
-                window.riskChart = new Chart(riskCtx.getContext('2d'), {
-                    type: 'radar',
-                    data: { labels: ['Heat','Drought','Flood','Pest','Wind'], datasets: [{ label: 'Risk', data: [65,75,20,45,30], backgroundColor: 'rgba(255,152,0,0.2)', borderColor: '#ff9800' }] },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100 } } }
-                });
-                console.log('Risk chart created');
-            }
+                // Risk Radar
+                const riskCanvas = document.getElementById('riskChart');
+                if(riskCanvas) {
+                    const riskCtx = riskCanvas.getContext('2d');
+                    if(riskCtx) {
+                        new Chart(riskCtx, {
+                            type: 'radar',
+                            data: { labels: ['Heat','Drought','Flood','Pest','Wind'], datasets: [{ label: 'Risk', data: [65,75,20,45,30], backgroundColor: 'rgba(255,152,0,0.2)', borderColor: '#ff9800' }] },
+                            options: { responsive: true, maintainAspectRatio: false }
+                        });
+                    }
+                }
 
-            // Crop Comparison
-            const cropCtx = document.getElementById('cropChart');
-            if(cropCtx && cropCtx.getContext) {
-                if(window.cropChart) window.cropChart.destroy();
-                const crops = data?.recommendations?.slice(0,5) || [{crop:'Rice',probability:0.85},{crop:'Maize',probability:0.72},{crop:'Cotton',probability:0.68},{crop:'Sugarcane',probability:0.62},{crop:'Wheat',probability:0.55}];
-                window.cropChart = new Chart(cropCtx.getContext('2d'), {
-                    type: 'bar',
-                    data: { labels: crops.map(c=>c.crop), datasets: [{ label: 'Suitability %', data: crops.map(c=>Math.round(c.probability * 100)), backgroundColor: ['#4caf50','#8bc34a','#cddc39','#ffeb3b','#2196f3'], borderRadius: 5 }] },
-                    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { max: 100 } } }
-                });
-                console.log('Crop chart created');
-            }
-            
-            console.log('All charts loaded successfully');
+                // Crop Comparison
+                const cropCanvas = document.getElementById('cropChart');
+                if(cropCanvas) {
+                    const cropCtx = cropCanvas.getContext('2d');
+                    if(cropCtx) {
+                        const crops = data?.recommendations?.slice(0,5) || [{crop:'Rice',probability:0.85},{crop:'Maize',probability:0.72},{crop:'Cotton',probability:0.68},{crop:'Sugarcane',probability:0.62},{crop:'Wheat',probability:0.55}];
+                        new Chart(cropCtx, {
+                            type: 'bar',
+                            data: { labels: crops.map(c=>c.crop), datasets: [{ label: 'Suitability %', data: crops.map(c=>Math.round(c.probability * 100)), backgroundColor: '#4caf50', borderRadius: 5 }] },
+                            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false }
+                        });
+                    }
+                }
+            }, 500);
         }
 
         async function loadCrops() {

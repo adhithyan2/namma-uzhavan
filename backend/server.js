@@ -14,6 +14,16 @@ const Product = require('./models/Product');
 const Dealer = require('./models/Dealer');
 const Farmer = require('./models/Farmer');
 const { LandRecord, SaleHistory, LandDocument } = require('./models/LandRecord');
+const SoilHealth = require('./models/SoilHealth');
+const SoilMoistureReading = require('./models/SoilMoistureReading');
+const CropHealth = require('./models/CropHealth');
+
+// Import Routes
+const cropRoutes = require('./routes/cropRoutes');
+const weatherRoutes = require('./routes/weatherRoutes');
+const aiAdvisorRoutes = require('./routes/aiAdvisorRoutes');
+const soilRoutes = require('./routes/soilRoutes');
+const cropHealthRoutes = require('./routes/cropHealthRoutes');
 
 let farmers = [];
 
@@ -54,6 +64,13 @@ const WEATHER_API_KEY = process.env.WEATHER_API_KEY || '09043d37fbaf47dc1c785458
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../frontend')));
+
+// API Routes
+app.use('/api', cropRoutes);
+app.use('/api', weatherRoutes);
+app.use('/api', aiAdvisorRoutes);
+app.use('/api', soilRoutes);
+app.use('/api', cropHealthRoutes);
 
 // Connect to MongoDB
 const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/climate_crop_engine';

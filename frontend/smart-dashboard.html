@@ -621,8 +621,8 @@
             </div>
         </div>
 
-        <!-- Charts -->
-        <div class="charts-grid">
+        <!-- Charts (Dashboard Only) -->
+        <div class="charts-grid" id="dashboardCharts">
             <div class="card">
                 <div class="card-header"><span class="card-title"><i
                             class="fas fa-temperature-high text-danger me-2"></i>7-Day Temperature</span></div>
@@ -653,8 +653,8 @@
             </div>
         </div>
 
-        <!-- Alerts -->
-        <div class="card">
+        <!-- Alerts (Dashboard Only) -->
+        <div class="card" id="dashboardAlerts">
             <div class="card-header"><span class="card-title"><i class="fas fa-bell text-warning me-2"></i>Risk
                     Alerts</span></div>
             <div class="card-body" id="alertsBody"></div>
@@ -1265,18 +1265,31 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function () {
+            // Show dashboard charts and alerts on initial load (dashboard is default)
+            const dashboardCharts = document.getElementById('dashboardCharts');
+            const dashboardAlerts = document.getElementById('dashboardAlerts');
+            if (dashboardCharts) dashboardCharts.style.display = 'grid';
+            if (dashboardAlerts) dashboardAlerts.style.display = 'block';
+            
             initMap();
             loadAllData();
+            loadDashboardCharts();
             loadProfileData();
             setTimeout(refreshAgents, 500);
         });
 
         function showPage(page) {
-            // Hide all pages first
+            // Hide all page sections first
             document.querySelectorAll('.page-section').forEach(p => {
                 p.classList.remove('active');
                 p.style.display = 'none';
             });
+
+            // Hide all dashboard-specific content by default
+            const dashboardCharts = document.getElementById('dashboardCharts');
+            const dashboardAlerts = document.getElementById('dashboardAlerts');
+            if (dashboardCharts) dashboardCharts.style.display = 'none';
+            if (dashboardAlerts) dashboardAlerts.style.display = 'none';
 
             // Remove active from all menu items
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
@@ -1295,6 +1308,12 @@
                 selectedPage.style.display = 'block';
             }
 
+            // Show dashboard-specific content only for dashboard
+            if (page === 'dashboard') {
+                if (dashboardCharts) dashboardCharts.style.display = 'grid';
+                if (dashboardAlerts) dashboardAlerts.style.display = 'block';
+            }
+
             // Update title
             const titles = {
                 dashboard: smartT('dashboard'),
@@ -1309,13 +1328,51 @@
             };
             document.getElementById('pageTitle').textContent = titles[page] || page;
 
-            // Load page-specific data
-            if (page === 'weather') loadWeatherForecast();
+            // Load page-specific data and charts
+            if (page === 'weather') {
+                loadWeatherForecast();
+                loadWeatherCharts();
+            }
             if (page === 'crops') loadCrops();
             if (page === 'location') refreshAgents();
-            if (page === 'dashboard') loadAllData();
+            if (page === 'dashboard') {
+                loadAllData();
+                loadDashboardCharts();
+            }
             if (page === 'alerts') loadAlerts();
-            if (page === 'reports') loadReports();
+            if (page === 'reports') {
+                loadReports();
+                loadReportsCharts();
+            }
+        }
+
+        // Module switch function - wrapper for showPage
+        function openModule(moduleName) {
+            showPage(moduleName);
+        }
+
+        // Separate chart loading functions for each module
+        function loadDashboardCharts() {
+            console.log('Loading dashboard charts...');
+            // Destroy existing charts first
+            if (window.tempChartInstance) { window.tempChartInstance.destroy(); window.tempChartInstance = null; }
+            if (window.rainChartInstance) { window.rainChartInstance.destroy(); window.rainChartInstance = null; }
+            if (window.riskChartInstance) { window.riskChartInstance.destroy(); window.riskChartInstance = null; }
+            if (window.cropChartInstance) { window.cropChartInstance.destroy(); window.cropChartInstance = null; }
+            
+            // Get data from DOM or use defaults
+            const village = document.getElementById('villageSelect')?.value || 'Coimbatore';
+            loadAllData();
+        }
+
+        function loadWeatherCharts() {
+            console.log('Loading weather charts...');
+            // Weather module specific charts can be added here
+        }
+
+        function loadReportsCharts() {
+            console.log('Loading reports charts...');
+            // Reports module specific charts can be added here
         }
 
         function showProfilePage() {

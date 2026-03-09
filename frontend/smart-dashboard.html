@@ -1352,7 +1352,7 @@
         }
 
         // Separate chart loading functions for each module
-        function loadDashboardCharts() {
+        async function loadDashboardCharts() {
             console.log('Loading dashboard charts...');
             // Destroy existing charts first
             if (window.tempChartInstance) { window.tempChartInstance.destroy(); window.tempChartInstance = null; }
@@ -1360,9 +1360,25 @@
             if (window.riskChartInstance) { window.riskChartInstance.destroy(); window.riskChartInstance = null; }
             if (window.cropChartInstance) { window.cropChartInstance.destroy(); window.cropChartInstance = null; }
             
-            // Get data from DOM or use defaults
+            // Get data and load charts
             const village = document.getElementById('villageSelect')?.value || 'Coimbatore';
-            loadAllData();
+            
+            try {
+                const [weatherRes, forecastRes, cropRes] = await Promise.all([
+                    fetch(`/api/weather?city=${village}`),
+                    fetch(`/api/forecast?city=${village}`),
+                    fetch('/api/crops?N=60&P=55&K=45&temperature=25&humidity=70&ph=6.5&rainfall=150')
+                ]);
+                
+                const weatherData = weatherRes.ok ? await weatherRes.json() : { current: { temp: 28, humidity: 65 } };
+                const forecastData = forecastRes.ok ? await forecastRes.json() : { forecast: [] };
+                const cropData = cropRes.ok ? await cropRes.json() : [];
+                
+                loadCharts(weatherData, forecastData, cropData);
+            } catch(e) {
+                console.log('Error loading charts, using defaults');
+                loadCharts({ current: { temp: 28, humidity: 65 } }, { forecast: [] }, []);
+            }
         }
 
         function loadWeatherCharts() {

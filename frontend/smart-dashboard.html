@@ -1554,7 +1554,8 @@
             console.log('Updating dashboard for:', village, 'Coords:', lat, lon);
 
             // Show loading state
-            document.getElementById('statLocation').textContent = village;
+            const locationEl = document.getElementById('statLocation');
+            if (locationEl) locationEl.textContent = village;
 
             // Update map if available
             const coords = { 
@@ -1569,10 +1570,14 @@
                 'Kochi': [9.9312, 76.2673], 
                 'Thiruvananthapuram': [8.5241, 76.9366] 
             };
+            
             const pos = coords[village] || [11.0168, 76.9558];
-            if (lat && lon) {
-                if (map) map.setView([lat, lon], 12);
-            } else if (map) {
+            const latNum = parseFloat(lat);
+            const lonNum = parseFloat(lon);
+            
+            if (lat && lon && !isNaN(latNum) && !isNaN(lonNum)) {
+                if (map && map.setView) map.setView([latNum, lonNum], 12);
+            } else if (map && map.setView) {
                 map.setView(pos, 12);
             }
 
@@ -1641,7 +1646,7 @@
                 const cropData = (cropRes?.ok) ? await cropRes.json() : defaultCrops;
 
                 // Update all dashboard components
-                updateWeatherDisplay(weatherData);
+                updateWeatherDisplay(weatherData, village);
                 updateCropDisplay(cropData);
                 loadCharts(weatherData, forecastData, cropData);
 
@@ -1649,26 +1654,51 @@
             } catch (e) {
                 console.error('Error updating dashboard:', e);
                 // Use defaults on error
-                updateWeatherDisplay(defaultWeather);
+                updateWeatherDisplay(defaultWeather, village);
                 updateCropDisplay(defaultCrops);
                 loadCharts(defaultWeather, defaultForecast, defaultCrops);
             }
         }
 
         // Update weather display elements
-        function updateWeatherDisplay(weatherData) {
-            const current = weatherData.current || {};
+        function updateWeatherDisplay(weatherData, villageName) {
+            const village = villageName || 'Coimbatore';
+            let current = {};
+            
+            // Handle different API response formats
+            if (weatherData.current) {
+                // City API format
+                current = weatherData.current;
+            } else if (weatherData.temperature !== undefined) {
+                // Coords API format - convert to current format
+                current = {
+                    temp: weatherData.temperature,
+                    humidity: weatherData.humidity,
+                    wind: weatherData.windSpeed,
+                    rain: weatherData.rain || 0,
+                    pressure: weatherData.pressure,
+                    condition: weatherData.weatherCondition,
+                    city: weatherData.location || village,
+                    country: weatherData.region || 'India',
+                    description: weatherData.description
+                };
+            } else {
+                current = { temp: 28, humidity: 65, condition: 'Clear', city: village, country: 'India' };
+            }
+            
+            // Ensure country is a string
+            const country = (current.country && typeof current.country === 'object') ? 'India' : (current.country || 'India');
             
             // Update stats
-            document.getElementById('statLocation').textContent = current.city || 'Coimbatore';
-            document.getElementById('statDistrict').textContent = current.country || 'India';
+            document.getElementById('statLocation').textContent = current.city || village;
+            document.getElementById('statDistrict').textContent = country;
             document.getElementById('statTemp').textContent = (current.temp || 25) + '°C';
             document.getElementById('statWeather').textContent = current.condition || 'Clear';
 
             // Update weather card
             document.getElementById('weatherTemp').textContent = (current.temp || 25) + '°C';
             document.getElementById('weatherCondition').textContent = current.description || 'Clear Sky';
-            document.getElementById('weatherLocation').textContent = `${current.city || 'Coimbatore'}, ${current.country || 'India'}`;
+            document.getElementById('weatherLocation').textContent = `${current.city || village}, ${country}`;
             document.getElementById('weatherHumidity').textContent = (current.humidity || 70) + '%';
             document.getElementById('weatherWind').textContent = (current.wind || 5) + ' m/s';
             document.getElementById('weatherRain').textContent = (current.rain || 0) + '%';

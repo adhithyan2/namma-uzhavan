@@ -1281,9 +1281,10 @@
             // Remove active from all menu items
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
 
-            // Add active to clicked menu item
-            if (event && event.target) {
-                const menuItem = event.target.closest('.menu-item');
+            // Add active to clicked menu item (use passed event or global)
+            const evt = event || window.event;
+            if (evt && evt.target) {
+                const menuItem = evt.target.closest('.menu-item');
                 if (menuItem) menuItem.classList.add('active');
             }
 

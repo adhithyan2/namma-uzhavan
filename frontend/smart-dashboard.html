@@ -372,11 +372,29 @@
 
         /* Page Sections */
         .page-section {
-            display: none;
+            display: none !important;
         }
 
         .page-section.active {
-            display: block;
+            display: block !important;
+        }
+
+        /* Dashboard-only sections - hidden by default */
+        #dashboardCharts,
+        #dashboardAlerts,
+        #dashboardWeatherCard {
+            display: none !important;
+        }
+
+        /* Show only when dashboard is active */
+        #page-dashboard.active #dashboardCharts,
+        #page-dashboard.active #dashboardAlerts,
+        #page-dashboard.active #dashboardWeatherCard {
+            display: block !important;
+        }
+
+        #page-dashboard.active #dashboardCharts {
+            display: grid !important;
         }
 
         /* Loading */
@@ -1282,16 +1300,7 @@
             // Hide all page sections first
             document.querySelectorAll('.page-section').forEach(p => {
                 p.classList.remove('active');
-                p.style.display = 'none';
             });
-
-            // Hide all dashboard-specific content by default
-            const dashboardCharts = document.getElementById('dashboardCharts');
-            const dashboardAlerts = document.getElementById('dashboardAlerts');
-            const dashboardWeatherCard = document.getElementById('dashboardWeatherCard');
-            if (dashboardCharts) dashboardCharts.style.display = 'none';
-            if (dashboardAlerts) dashboardAlerts.style.display = 'none';
-            if (dashboardWeatherCard) dashboardWeatherCard.style.display = 'none';
 
             // Remove active from all menu items
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
@@ -1307,14 +1316,6 @@
             const selectedPage = document.getElementById('page-' + page);
             if (selectedPage) {
                 selectedPage.classList.add('active');
-                selectedPage.style.display = 'block';
-            }
-
-            // Show dashboard-specific content only for dashboard
-            if (page === 'dashboard') {
-                if (dashboardCharts) dashboardCharts.style.display = 'grid';
-                if (dashboardAlerts) dashboardAlerts.style.display = 'block';
-                if (dashboardWeatherCard) dashboardWeatherCard.style.display = 'block';
             }
 
             // Update title

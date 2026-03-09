@@ -1398,8 +1398,12 @@
         async function updateFromMap(lat, lon) {
             try {
                 const res = await fetch(`/api/weather-by-coords?lat=${lat}&lon=${lon}`);
+                if (!res.ok) throw new Error('Weather API error');
+                
                 const data = await res.json();
-                const villageName = data.location || 'Coimbatore';
+                
+                // Use exact location from API
+                let villageName = data.location || data.exactLocation || 'Coimbatore';
                 
                 document.getElementById('villageSelect').value = villageName;
                 document.getElementById('locationInfo').style.display = 'block';
@@ -1407,14 +1411,24 @@
                     <strong>${villageName}, ${data.region || 'India'}</strong><br>
                     Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}
                 `;
+                
+                // Show weather in location card
+                document.getElementById('locationWeather').style.display = 'block';
+                document.getElementById('locTemp').textContent = Math.round(data.temperature || 25) + '°C';
+                document.getElementById('locCondition').textContent = data.weatherCondition || 'Clear';
+                document.getElementById('locHumidity').textContent = data.humidity || 70;
+                document.getElementById('locWind').textContent = data.windSpeed || 5;
+                document.getElementById('locVillage').textContent = villageName;
+                
                 localStorage.setItem('farmLocation', JSON.stringify({ village: villageName, latitude: lat, longitude: lon, state: data.region }));
                 
-                // Update all dashboard components with the detected location
-                updateDashboard(villageName);
+                // Update all dashboard with coordinates for accurate weather & charts
+                updateDashboard(villageName, lat, lon);
+                
+                console.log('Map clicked at:', lat, lon, 'Location:', villageName);
             } catch (e) { 
-                console.log(e); 
-                // Fallback to default
-                updateDashboard('Coimbatore');
+                console.error('Error fetching weather from map:', e); 
+                alert('Could not get weather for this location.');
             }
         }
 
@@ -1534,10 +1548,10 @@
         }
 
         // Central function to update all dashboard components based on location
-        async function updateDashboard(location) {
+        async function updateDashboard(location, lat, lon) {
             const village = location || document.getElementById('villageSelect')?.value || 'Coimbatore';
             
-            console.log('Updating dashboard for:', village);
+            console.log('Updating dashboard for:', village, 'Coords:', lat, lon);
 
             // Show loading state
             document.getElementById('statLocation').textContent = village;
@@ -1556,7 +1570,11 @@
                 'Thiruvananthapuram': [8.5241, 76.9366] 
             };
             const pos = coords[village] || [11.0168, 76.9558];
-            if (map) map.setView(pos, 12);
+            if (lat && lon) {
+                if (map) map.setView([lat, lon], 12);
+            } else if (map) {
+                map.setView(pos, 12);
+            }
 
             // Destroy old charts before creating new ones
             if (window.tempChartInstance) { window.tempChartInstance.destroy(); window.tempChartInstance = null; }
@@ -1570,16 +1588,56 @@
             const defaultCrops = [];
 
             try {
+                let weatherUrl, forecastUrl;
+                
+                // Use coordinates-based APIs if lat/lon provided
+                if (lat && lon) {
+                    weatherUrl = `/api/weather-by-coords?lat=${lat}&lon=${lon}`;
+                    forecastUrl = `/api/forecast-by-coords?lat=${lat}&lon=${lon}`;
+                } else {
+                    weatherUrl = `/api/weather?city=${village}`;
+                    forecastUrl = `/api/forecast?city=${village}`;
+                }
+
                 // Fetch all data in parallel
                 const [weatherRes, forecastRes, cropRes] = await Promise.all([
-                    fetch(`/api/weather?city=${village}`).catch(() => null),
-                    fetch(`/api/forecast?city=${village}`).catch(() => null),
+                    fetch(weatherUrl).catch(() => null),
+                    fetch(forecastUrl).catch(() => null),
                     fetch('/api/crops?N=60&P=55&K=45&temperature=25&humidity=70&ph=6.5&rainfall=150').catch(() => null)
                 ]);
 
-                // Parse responses
-                const weatherData = (weatherRes?.ok) ? await weatherRes.json() : defaultWeather;
-                const forecastData = (forecastRes?.ok) ? await forecastRes.json() : defaultForecast;
+                // Parse responses - handle both city and coords API formats
+                let weatherData = defaultWeather;
+                if (weatherRes?.ok) {
+                    const data = await weatherRes.json();
+                    // Convert coords API format to city API format
+                    if (data.temperature !== undefined) {
+                        weatherData = { 
+                            current: { 
+                                temp: data.temperature, 
+                                humidity: data.humidity, 
+                                wind: data.windSpeed, 
+                                rain: 0, 
+                                pressure: data.pressure, 
+                                condition: data.weatherCondition, 
+                                city: data.location || village, 
+                                country: data.region || 'India', 
+                                description: data.description 
+                            } 
+                        };
+                    } else {
+                        weatherData = data;
+                    }
+                }
+                
+                let forecastData = defaultForecast;
+                if (forecastRes?.ok) {
+                    const data = await forecastRes.json();
+                    if (data.forecast) {
+                        forecastData = data;
+                    }
+                }
+                
                 const cropData = (cropRes?.ok) ? await cropRes.json() : defaultCrops;
 
                 // Update all dashboard components

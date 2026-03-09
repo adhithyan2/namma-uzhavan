@@ -1267,34 +1267,45 @@ app.get('/api/weather-by-coords', async (req, res) => {
 
     const data = response.data;
     
-    // Map to better location names for known areas
+    // Map to better location names for known areas in India
     let locationName = data.name;
+    let region = 'India';
     
-    // Coimbatore area mapping
-    if (data.name.toLowerCase().includes('singanallur') || 
-        data.name.toLowerCase().includes('coimbatore') ||
-        (latNum >= 10.9 && latNum <= 11.2 && lonNum >= 76.9 && lonNum <= 77.1)) {
-      locationName = 'Coimbatore';
-    }
-    // Chennai area
-    else if (data.name.toLowerCase().includes('chennai') || 
-             (latNum >= 12.8 && latNum <= 13.2 && lonNum >= 80.1 && lonNum <= 80.4)) {
-      locationName = 'Chennai';
-    }
-    // Delhi area
-    else if (data.name.toLowerCase().includes('delhi') ||
-             (latNum >= 28.4 && latNum <= 28.9 && lonNum >= 76.8 && lonNum <= 77.4)) {
-      locationName = 'Delhi';
-    }
-    // Hyderabad area
-    else if (data.name.toLowerCase().includes('hyderabad') ||
-             (latNum >= 17.2 && latNum <= 17.5 && lonNum >= 78.3 && lonNum <= 78.7)) {
-      locationName = 'Hyderabad';
-    }
-    // Bangalore area
-    else if (data.name.toLowerCase().includes('bengaluru') || data.name.toLowerCase().includes('bangalore') ||
-             (latNum >= 12.8 && latNum <= 13.2 && lonNum >= 77.4 && lonNum <= 77.8)) {
-      locationName = 'Bangalore';
+    // Location mapping based on coordinates and city names
+    const locationMappings = [
+      { names: ['coimbatore', 'singanallur', 'podanur', 'kurichi', 'pollachi', 'tirupur'], latMin: 10.9, latMax: 11.3, lonMin: 76.9, lonMax: 77.2, location: 'Coimbatore', region: 'Tamil Nadu' },
+      { names: ['chennai', 'madras', 'kanchipuram', 'chengalpattu'], latMin: 12.8, latMax: 13.2, lonMin: 80.1, lonMax: 80.4, location: 'Chennai', region: 'Tamil Nadu' },
+      { names: ['madurai', 'dindigul', 'theni', 'virudhunagar'], latMin: 9.8, latMax: 10.3, lonMin: 77.9, lonMax: 78.3, location: 'Madurai', region: 'Tamil Nadu' },
+      { names: ['chittoor', 'tirupati', 'kanchipuram'], latMin: 13.1, latMax: 13.5, lonMin: 78.9, lonMax: 79.6, location: 'Chittoor', region: 'Andhra Pradesh' },
+      { names: ['hyderabad', 'secunderabad', 'warangal', 'karimnagar'], latMin: 17.2, latMax: 17.5, lonMin: 78.3, lonMax: 78.7, location: 'Hyderabad', region: 'Telangana' },
+      { names: ['bangalore', 'bengaluru', 'mysore', 'mysuru'], latMin: 12.8, latMax: 13.2, lonMin: 77.4, lonMax: 77.8, location: 'Bangalore', region: 'Karnataka' },
+      { names: ['mangalore', 'mangaluru', 'udupi', 'dakshina kannada'], latMin: 12.1, latMax: 13.0, lonMin: 74.6, lonMax: 75.2, location: 'Mangalore', region: 'Karnataka' },
+      { names: ['kochi', 'cochin', 'ernakulam', 'thrissur', 'alappuzha'], latMin: 9.5, latMax: 10.5, lonMin: 76.0, lonMax: 76.6, location: 'Kochi', region: 'Kerala' },
+      { names: ['thiruvananthapuram', 'trivandrum', 'kollam'], latMin: 8.3, latMax: 8.8, lonMin: 76.8, lonMax: 77.4, location: 'Thiruvananthapuram', region: 'Kerala' },
+      { names: ['delhi', 'new delhi', 'gurgaon', 'noida', 'faridabad'], latMin: 28.4, latMax: 28.9, lonMin: 76.8, lonMax: 77.4, location: 'Delhi', region: 'Delhi' },
+      { names: ['mumbai', 'bombay', 'navi mumbai', 'than', 'palghar'], latMin: 18.8, latMax: 19.3, lonMin: 72.7, lonMax: 73.2, location: 'Mumbai', region: 'Maharashtra' },
+      { names: ['pune', 'pcmc', ' Pimpri'], latMin: 18.4, latMax: 18.7, lonMin: 73.7, lonMax: 74.0, location: 'Pune', region: 'Maharashtra' },
+      { names: ['kolkata', 'calcutta', 'howrah', '24 parganas'], latMin: 22.4, latMax: 22.7, lonMin: 88.2, lonMax: 88.5, location: 'Kolkata', region: 'West Bengal' },
+      { names: ['jaipur', 'ajmer', ' Jodhpur'], latMin: 26.8, latMax: 27.3, lonMin: 75.5, lonMax: 76.0, location: 'Jaipur', region: 'Rajasthan' },
+      { names: ['lucknow', 'kanpur', 'agra'], latMin: 26.5, latMax: 27.3, lonMin: 80.5, lonMax: 81.2, location: 'Lucknow', region: 'Uttar Pradesh' },
+      { names: ['chandigarh', 'panchkula', 'mohali'], latMin: 30.6, latMax: 30.8, lonMin: 76.7, lonMax: 77.0, location: 'Chandigarh', region: 'Punjab' },
+      { names: ['visakhapatnam', 'vizag', 'vijayawada', 'guntur'], latMin: 17.5, latMax: 17.9, lonMin: 78.3, lonMax: 83.5, location: 'Visakhapatnam', region: 'Andhra Pradesh' },
+      { names: ['guwahati', 'shillong', 'dispur'], latMin: 26.0, latMax: 26.5, lonMin: 91.5, lonMax: 92.0, location: 'Guwahati', region: 'Assam' },
+    ];
+
+    // Check each mapping
+    for (const mapping of locationMappings) {
+      const nameMatch = mapping.names.some(name => 
+        data.name.toLowerCase().includes(name)
+      );
+      const coordMatch = latNum >= mapping.latMin && latNum <= mapping.latMax && 
+                        lonNum >= mapping.lonMin && lonNum <= mapping.lonMax;
+      
+      if (nameMatch || coordMatch) {
+        locationName = mapping.location;
+        region = mapping.region;
+        break;
+      }
     }
     
     res.json({
@@ -1311,7 +1322,7 @@ app.get('/api/weather-by-coords', async (req, res) => {
       visibility: data.visibility,
       sunrise: data.sys.sunrise,
       sunset: data.sys.sunset,
-      region: 'Tamil Nadu'
+      region: region
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch weather data' });

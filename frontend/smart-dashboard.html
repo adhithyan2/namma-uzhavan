@@ -575,8 +575,8 @@
             </div>
         </div>
 
-        <!-- Weather & Crops -->
-        <div class="card">
+        <!-- Weather & Crops (Dashboard Only) -->
+        <div class="card" id="dashboardWeatherCard">
             <div class="card-header">
                 <span class="card-title"><i class="fas fa-cloud-sun text-success me-2"></i>Weather & AI Crop
                     Recommendations</span>
@@ -1288,8 +1288,10 @@
             // Hide all dashboard-specific content by default
             const dashboardCharts = document.getElementById('dashboardCharts');
             const dashboardAlerts = document.getElementById('dashboardAlerts');
+            const dashboardWeatherCard = document.getElementById('dashboardWeatherCard');
             if (dashboardCharts) dashboardCharts.style.display = 'none';
             if (dashboardAlerts) dashboardAlerts.style.display = 'none';
+            if (dashboardWeatherCard) dashboardWeatherCard.style.display = 'none';
 
             // Remove active from all menu items
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
@@ -1312,6 +1314,7 @@
             if (page === 'dashboard') {
                 if (dashboardCharts) dashboardCharts.style.display = 'grid';
                 if (dashboardAlerts) dashboardAlerts.style.display = 'block';
+                if (dashboardWeatherCard) dashboardWeatherCard.style.display = 'block';
             }
 
             // Update title

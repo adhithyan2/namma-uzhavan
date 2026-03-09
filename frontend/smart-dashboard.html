@@ -1399,15 +1399,23 @@
             try {
                 const res = await fetch(`/api/weather-by-coords?lat=${lat}&lon=${lon}`);
                 const data = await res.json();
-                document.getElementById('villageSelect').value = data.location;
+                const villageName = data.location || 'Coimbatore';
+                
+                document.getElementById('villageSelect').value = villageName;
                 document.getElementById('locationInfo').style.display = 'block';
                 document.getElementById('selectedAddress').innerHTML = `
-                    <strong>${data.location}, ${data.region}</strong><br>
+                    <strong>${villageName}, ${data.region || 'India'}</strong><br>
                     Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}
                 `;
-                localStorage.setItem('farmLocation', JSON.stringify({ village: data.location, latitude: lat, longitude: lon, state: data.region }));
-                loadAllData();
-            } catch (e) { console.log(e); }
+                localStorage.setItem('farmLocation', JSON.stringify({ village: villageName, latitude: lat, longitude: lon, state: data.region }));
+                
+                // Update all dashboard components with the detected location
+                updateDashboard(villageName);
+            } catch (e) { 
+                console.log(e); 
+                // Fallback to default
+                updateDashboard('Coimbatore');
+            }
         }
 
         function detectGPS() {
@@ -1654,15 +1662,17 @@
             fetch(`/api/weather?location=${village}`)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.temperature !== undefined) {
+                    if (data.temperature !== undefined || data.current?.temp !== undefined) {
                         document.getElementById('locationWeather').style.display = 'block';
-                        document.getElementById('locTemp').textContent = Math.round(data.temperature) + '°C';
-                        document.getElementById('locCondition').textContent = data.weatherCondition || data.condition;
-                        document.getElementById('locHumidity').textContent = data.humidity;
-                        document.getElementById('locWind').textContent = data.windSpeed;
+                        document.getElementById('locTemp').textContent = Math.round(data.temperature || data.current?.temp || 25) + '°C';
+                        document.getElementById('locCondition').textContent = data.weatherCondition || data.condition || data.current?.condition || 'Clear';
+                        document.getElementById('locHumidity').textContent = data.humidity || data.current?.humidity || 70;
+                        document.getElementById('locWind').textContent = data.windSpeed || data.current?.wind || 5;
                         document.getElementById('locVillage').textContent = data.location || village;
                         document.getElementById('villageSelect').value = data.location || village;
-                        loadAllData();
+                        
+                        // Update all dashboard components
+                        updateDashboard(data.location || village);
                     } else {
                         alert('Location not found. Try another name.');
                     }
@@ -1680,20 +1690,23 @@
                     try {
                         const res = await fetch(`/api/weather-by-coords?lat=${lat}&lon=${lon}`);
                         const data = await res.json();
+                        const villageName = data.location || 'Coimbatore';
 
                         document.getElementById('locationWeather').style.display = 'block';
-                        document.getElementById('locTemp').textContent = Math.round(data.temperature) + '°C';
-                        document.getElementById('locCondition').textContent = data.weatherCondition || data.condition;
-                        document.getElementById('locHumidity').textContent = data.humidity;
-                        document.getElementById('locWind').textContent = data.windSpeed;
-                        document.getElementById('locVillage').textContent = data.location || 'Your Location';
+                        document.getElementById('locTemp').textContent = Math.round(data.temperature || 25) + '°C';
+                        document.getElementById('locCondition').textContent = data.weatherCondition || data.condition || 'Clear';
+                        document.getElementById('locHumidity').textContent = data.humidity || 70;
+                        document.getElementById('locWind').textContent = data.windSpeed || 5;
+                        document.getElementById('locVillage').textContent = villageName;
+                        document.getElementById('villageSelect').value = villageName;
 
                         if (map && marker) {
                             map.setView([lat, lon], 12);
                             marker.setLatLng([lat, lon]);
                         }
 
-                        loadAllData();
+                        // Update all dashboard components with GPS location
+                        updateDashboard(villageName);
                     } catch (e) {
                         alert('Could not get weather for your location');
                     }

@@ -1290,8 +1290,9 @@
             if (dashboardAlerts) dashboardAlerts.style.display = 'block';
             
             initMap();
-            loadAllData();
-            loadDashboardCharts();
+            // Use central updateDashboard function for initial load
+            const village = document.getElementById('villageSelect')?.value || 'Coimbatore';
+            updateDashboard(village);
             loadProfileData();
             setTimeout(refreshAgents, 500);
         });
@@ -1356,33 +1357,9 @@
         }
 
         // Separate chart loading functions for each module
-        async function loadDashboardCharts() {
-            console.log('Loading dashboard charts...');
-            // Destroy existing charts first
-            if (window.tempChartInstance) { window.tempChartInstance.destroy(); window.tempChartInstance = null; }
-            if (window.rainChartInstance) { window.rainChartInstance.destroy(); window.rainChartInstance = null; }
-            if (window.riskChartInstance) { window.riskChartInstance.destroy(); window.riskChartInstance = null; }
-            if (window.cropChartInstance) { window.cropChartInstance.destroy(); window.cropChartInstance = null; }
-            
-            // Get data and load charts
+        function loadDashboardCharts() {
             const village = document.getElementById('villageSelect')?.value || 'Coimbatore';
-            
-            try {
-                const [weatherRes, forecastRes, cropRes] = await Promise.all([
-                    fetch(`/api/weather?city=${village}`),
-                    fetch(`/api/forecast?city=${village}`),
-                    fetch('/api/crops?N=60&P=55&K=45&temperature=25&humidity=70&ph=6.5&rainfall=150')
-                ]);
-                
-                const weatherData = weatherRes.ok ? await weatherRes.json() : { current: { temp: 28, humidity: 65 } };
-                const forecastData = forecastRes.ok ? await forecastRes.json() : { forecast: [] };
-                const cropData = cropRes.ok ? await cropRes.json() : [];
-                
-                loadCharts(weatherData, forecastData, cropData);
-            } catch(e) {
-                console.log('Error loading charts, using defaults');
-                loadCharts({ current: { temp: 28, humidity: 65 } }, { forecast: [] }, []);
-            }
+            updateDashboard(village);
         }
 
         function loadWeatherCharts() {
@@ -1545,26 +1522,125 @@
 
         function updateLocation() {
             const village = document.getElementById('villageSelect').value;
+            updateDashboard(village);
+        }
 
-            // Show weather for selected village
-            fetch(`/api/weather?location=${village}`)
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById('locationWeather').style.display = 'block';
-                    document.getElementById('locTemp').textContent = Math.round(data.temperature) + '°C';
-                    document.getElementById('locCondition').textContent = data.weatherCondition || data.condition;
-                    document.getElementById('locHumidity').textContent = data.humidity;
-                    document.getElementById('locWind').textContent = data.windSpeed;
-                    document.getElementById('locVillage').textContent = data.location;
-                })
-                .catch(e => console.log('Weather error:', e));
+        // Central function to update all dashboard components based on location
+        async function updateDashboard(location) {
+            const village = location || document.getElementById('villageSelect')?.value || 'Coimbatore';
+            
+            console.log('Updating dashboard for:', village);
 
-            // Update map
-            const coords = { 'Coimbatore': [11.0168, 76.9558], 'Chennai': [13.0827, 80.2707], 'Madurai': [9.9252, 78.1198], 'Chittoor': [13.2170, 79.1000], 'Kallur': [13.3189, 79.4243], 'Hyderabad': [17.3850, 78.4867], 'Bangalore': [12.9716, 77.5946], 'Mangalore': [12.2958, 74.8728], 'Kochi': [9.9312, 76.2673], 'Thiruvananthapuram': [8.5241, 76.9366] };
+            // Show loading state
+            document.getElementById('statLocation').textContent = village;
+
+            // Update map if available
+            const coords = { 
+                'Coimbatore': [11.0168, 76.9558], 
+                'Chennai': [13.0827, 80.2707], 
+                'Madurai': [9.9252, 78.1198], 
+                'Chittoor': [13.2170, 79.1000], 
+                'Kallur': [13.3189, 79.4243], 
+                'Hyderabad': [17.3850, 78.4867], 
+                'Bangalore': [12.9716, 77.5946], 
+                'Mangalore': [12.2958, 74.8728], 
+                'Kochi': [9.9312, 76.2673], 
+                'Thiruvananthapuram': [8.5241, 76.9366] 
+            };
             const pos = coords[village] || [11.0168, 76.9558];
             if (map) map.setView(pos, 12);
 
-            loadAllData();
+            // Destroy old charts before creating new ones
+            if (window.tempChartInstance) { window.tempChartInstance.destroy(); window.tempChartInstance = null; }
+            if (window.rainChartInstance) { window.rainChartInstance.destroy(); window.rainChartInstance = null; }
+            if (window.riskChartInstance) { window.riskChartInstance.destroy(); window.riskChartInstance = null; }
+            if (window.cropChartInstance) { window.cropChartInstance.destroy(); window.cropChartInstance = null; }
+
+            // Default data
+            const defaultWeather = { current: { temp: 28, humidity: 65, wind: 5, rain: 0, pressure: 1013, condition: 'Clear', city: village, country: 'India', description: 'Clear Sky' } };
+            const defaultForecast = { forecast: [] };
+            const defaultCrops = [];
+
+            try {
+                // Fetch all data in parallel
+                const [weatherRes, forecastRes, cropRes] = await Promise.all([
+                    fetch(`/api/weather?city=${village}`).catch(() => null),
+                    fetch(`/api/forecast?city=${village}`).catch(() => null),
+                    fetch('/api/crops?N=60&P=55&K=45&temperature=25&humidity=70&ph=6.5&rainfall=150').catch(() => null)
+                ]);
+
+                // Parse responses
+                const weatherData = (weatherRes?.ok) ? await weatherRes.json() : defaultWeather;
+                const forecastData = (forecastRes?.ok) ? await forecastRes.json() : defaultForecast;
+                const cropData = (cropRes?.ok) ? await cropRes.json() : defaultCrops;
+
+                // Update all dashboard components
+                updateWeatherDisplay(weatherData);
+                updateCropDisplay(cropData);
+                loadCharts(weatherData, forecastData, cropData);
+
+                console.log('Dashboard updated successfully for:', village);
+            } catch (e) {
+                console.error('Error updating dashboard:', e);
+                // Use defaults on error
+                updateWeatherDisplay(defaultWeather);
+                updateCropDisplay(defaultCrops);
+                loadCharts(defaultWeather, defaultForecast, defaultCrops);
+            }
+        }
+
+        // Update weather display elements
+        function updateWeatherDisplay(weatherData) {
+            const current = weatherData.current || {};
+            
+            // Update stats
+            document.getElementById('statLocation').textContent = current.city || 'Coimbatore';
+            document.getElementById('statDistrict').textContent = current.country || 'India';
+            document.getElementById('statTemp').textContent = (current.temp || 25) + '°C';
+            document.getElementById('statWeather').textContent = current.condition || 'Clear';
+
+            // Update weather card
+            document.getElementById('weatherTemp').textContent = (current.temp || 25) + '°C';
+            document.getElementById('weatherCondition').textContent = current.description || 'Clear Sky';
+            document.getElementById('weatherLocation').textContent = `${current.city || 'Coimbatore'}, ${current.country || 'India'}`;
+            document.getElementById('weatherHumidity').textContent = (current.humidity || 70) + '%';
+            document.getElementById('weatherWind').textContent = (current.wind || 5) + ' m/s';
+            document.getElementById('weatherRain').textContent = (current.rain || 0) + '%';
+            document.getElementById('weatherPressure').textContent = (current.pressure || 1013) + ' hPa';
+
+            // Update location page weather if visible
+            const locationWeather = document.getElementById('locationWeather');
+            if (locationWeather) {
+                locationWeather.style.display = 'block';
+                document.getElementById('locTemp').textContent = Math.round(current.temp || 25) + '°C';
+                document.getElementById('locCondition').textContent = current.condition || 'Clear';
+                document.getElementById('locHumidity').textContent = current.humidity || 70;
+                document.getElementById('locWind').textContent = current.wind || 5;
+                document.getElementById('locVillage').textContent = current.city || village;
+            }
+        }
+
+        // Update crop display elements
+        function updateCropDisplay(cropData) {
+            const cropsArray = Array.isArray(cropData) ? cropData : (cropData.recommendations || []);
+            const topCrop = cropsArray[0] || {};
+            
+            // Update stats
+            document.getElementById('statCrop').textContent = topCrop.crop || 'Rice';
+            document.getElementById('statScore').textContent = Math.round((topCrop.probability || topCrop.score || 0.92) * 100) + '% Match';
+
+            // Update crop table
+            const tbody = document.getElementById('cropTableBody');
+            if (tbody) {
+                tbody.innerHTML = cropsArray.slice(0, 5).map(crop => `
+                    <tr>
+                        <td>${crop.crop}</td>
+                        <td><span class="badge bg-success">${Math.round((crop.probability || crop.score || 0.9) * 100)}%</span></td>
+                        <td>₹${crop.profit || '50,000'}</td>
+                        <td><span class="badge bg-warning">Low</span></td>
+                    </tr>
+                `).join('');
+            }
         }
 
         // Get weather for typed input
@@ -1738,39 +1814,6 @@
                 updateDashboard(defaultWeatherData, defaultCropData);
                 loadCharts(defaultWeatherData, defaultForecastData, defaultCropData);
             }
-        }
-
-        function updateDashboard(weatherData, cropData) {
-            const current = weatherData.current || {};
-            document.getElementById('statLocation').textContent = current.city || 'Coimbatore';
-            document.getElementById('statDistrict').textContent = current.country || 'India';
-            document.getElementById('statTemp').textContent = (current.temp || 25) + '°C';
-            document.getElementById('statWeather').textContent = current.condition || 'Clear';
-
-            // Update from crop data - handle both old and new format
-            const cropsArray = Array.isArray(cropData) ? cropData : (cropData.recommendations || []);
-            const topCrop = cropsArray[0] || {};
-            document.getElementById('statCrop').textContent = topCrop.crop || 'Rice';
-            document.getElementById('statScore').textContent = Math.round((topCrop.probability || topCrop.score || 0.92) * 100) + '% Match';
-
-            document.getElementById('weatherTemp').textContent = (current.temp || 25) + '°C';
-            document.getElementById('weatherCondition').textContent = current.description || 'Clear Sky';
-            document.getElementById('weatherLocation').textContent = `${current.city || 'Coimbatore'}, ${current.country || 'India'}`;
-            document.getElementById('weatherHumidity').textContent = (current.humidity || 70) + '%';
-            document.getElementById('weatherWind').textContent = (current.wind || 5) + ' m/s';
-            document.getElementById('weatherRain').textContent = (current.rain || 0) + '%';
-            document.getElementById('weatherPressure').textContent = (current.pressure || 1013) + ' hPa';
-
-            // Update crop table
-            const tbody = document.getElementById('cropTableBody');
-            tbody.innerHTML = cropsArray.slice(0, 5).map(crop => `
-                <tr>
-                    <td>${crop.crop}</td>
-                    <td><span class="badge bg-success">${Math.round((crop.probability || crop.score || 0.9) * 100)}%</span></td>
-                    <td>₹${crop.profit || '50,000'}</td>
-                    <td><span class="badge bg-warning">Low</span></td>
-                </tr>
-            `).join('');
         }
 
         function updateAIAdvisor(data) {

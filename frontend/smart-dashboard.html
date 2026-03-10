@@ -457,12 +457,12 @@
             <span>Smart Farmers</span>
         </div>
         <div class="sidebar-menu">
-            <a class="menu-item active" onclick="showPage('dashboard'); return false;"><i class="fas fa-th-large"></i><span
-                    data-i18n="dashboard">Dashboard</span></a>
+            <a class="menu-item active" onclick="showPage('dashboard'); return false;"><i
+                    class="fas fa-th-large"></i><span data-i18n="dashboard">Dashboard</span></a>
             <a class="menu-item" onclick="showPage('weather'); return false;"><i class="fas fa-cloud-sun"></i><span
                     data-i18n="weather">Weather</span></a>
-            <a class="menu-item" onclick="showPage('location'); return false;"><i class="fas fa-map-marker-alt"></i><span
-                    data-i18n="location">Select Location</span></a>
+            <a class="menu-item" onclick="showPage('location'); return false;"><i
+                    class="fas fa-map-marker-alt"></i><span data-i18n="location">Select Location</span></a>
             <a class="menu-item" onclick="showPage('crops'); return false;"><i class="fas fa-seedling"></i><span
                     data-i18n="crop_suggestions">Crop Suggestions</span></a>
             <a class="menu-item" onclick="showPage('alerts'); return false;"><i class="fas fa-bell"></i><span
@@ -473,8 +473,8 @@
                     data-i18n="marketplace">Marketplace</span></a>
             <a class="menu-item" onclick="showPage('reports'); return false;"><i class="fas fa-file-alt"></i><span
                     data-i18n="reports">Reports</span></a>
-            <a class="menu-item" onclick="showPage('schemes'); return false;"><i class="fas fa-hand-holding-usd"></i><span
-                    data-i18n="schemes">Schemes</span></a>
+            <a class="menu-item" onclick="showPage('schemes'); return false;"><i
+                    class="fas fa-hand-holding-usd"></i><span data-i18n="schemes">Schemes</span></a>
             <a class="menu-item" href="soil-dashboard.html"><i class="fas fa-tint"></i><span
                     data-i18n="soil_monitoring">Soil Monitoring</span></a>
             <a class="menu-item" href="crop-health-map.html"><i class="fas fa-map-marked-alt"></i><span>Crop Health
@@ -692,7 +692,8 @@
                     <!-- Type village name -->
                     <div class="mb-3">
                         <input type="text" id="villageInput" class="form-control"
-                            placeholder="Type village/city name...">
+                            placeholder="Type village/city name..." list="villageSuggestions">
+                        <datalist id="villageSuggestions"></datalist>
                         <button class="btn btn-primary mt-2" onclick="getWeatherForInput()">Get Weather</button>
                     </div>
 
@@ -1288,11 +1289,20 @@
             const dashboardAlerts = document.getElementById('dashboardAlerts');
             if (dashboardCharts) dashboardCharts.style.display = 'grid';
             if (dashboardAlerts) dashboardAlerts.style.display = 'block';
-            
+
             initMap();
-            // Use central updateDashboard function for initial load
-            const village = document.getElementById('villageSelect')?.value || 'Coimbatore';
-            updateDashboard(village);
+
+            // Auto-detect GPS if no location is saved
+            const savedLocation = localStorage.getItem('farmLocation');
+            if (savedLocation) {
+                try {
+                    const loc = JSON.parse(savedLocation);
+                    updateDashboard(loc.village, loc.latitude, loc.longitude);
+                } catch (e) { detectGPS(); }
+            } else {
+                detectGPS();
+            }
+
             loadProfileData();
             setTimeout(refreshAgents, 500);
         });
@@ -1332,6 +1342,11 @@
                 profile: smartT('profile')
             };
             document.getElementById('pageTitle').textContent = titles[page] || page;
+
+            // Fix map rendering issues when switching pages
+            if (page === 'location' && map) {
+                setTimeout(() => map.invalidateSize(), 150);
+            }
 
             // Load page-specific data and charts
             if (page === 'weather') {
@@ -1393,25 +1408,44 @@
                 marker.setLatLng(e.latlng);
                 updateFromMap(e.latlng.lat, e.latlng.lng);
             });
+
+            // Village Autocomplete Logic
+            const villageInput = document.getElementById('villageInput');
+            const villageSuggestions = document.getElementById('villageSuggestions');
+
+            if (villageInput) {
+                villageInput.addEventListener('input', async function () {
+                    const query = this.value.trim();
+                    if (query.length < 3) return;
+
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=in&featuretype=settlement&limit=5`);
+                        const data = await res.json();
+                        villageSuggestions.innerHTML = data.map(item => `<option value="${item.display_name}">`).join('');
+                    } catch (e) { console.error('Autocomplete error:', e); }
+                });
+            }
         }
 
         async function updateFromMap(lat, lon) {
             try {
                 const res = await fetch(`/api/weather-by-coords?lat=${lat}&lon=${lon}`);
                 if (!res.ok) throw new Error('Weather API error');
-                
+
                 const data = await res.json();
-                
+
                 // Use exact location from API
                 let villageName = data.location || data.exactLocation || 'Coimbatore';
-                
+                if (typeof villageName === 'object') villageName = villageName.name || 'Coimbatore';
+
                 document.getElementById('villageSelect').value = villageName;
                 document.getElementById('locationInfo').style.display = 'block';
+                const region = typeof data.region === 'string' ? data.region : (data.region?.name || 'India');
                 document.getElementById('selectedAddress').innerHTML = `
-                    <strong>${villageName}, ${data.region || 'India'}</strong><br>
+                    <strong>${villageName}, ${region}</strong><br>
                     Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}
                 `;
-                
+
                 // Show weather in location card
                 document.getElementById('locationWeather').style.display = 'block';
                 document.getElementById('locTemp').textContent = Math.round(data.temperature || 25) + '°C';
@@ -1419,15 +1453,15 @@
                 document.getElementById('locHumidity').textContent = data.humidity || 70;
                 document.getElementById('locWind').textContent = data.windSpeed || 5;
                 document.getElementById('locVillage').textContent = villageName;
-                
-                localStorage.setItem('farmLocation', JSON.stringify({ village: villageName, latitude: lat, longitude: lon, state: data.region }));
-                
+
+                localStorage.setItem('farmLocation', JSON.stringify({ village: villageName, latitude: lat, longitude: lon, state: region }));
+
                 // Update all dashboard with coordinates for accurate weather & charts
                 updateDashboard(villageName, lat, lon);
-                
+
                 console.log('Map clicked at:', lat, lon, 'Location:', villageName);
-            } catch (e) { 
-                console.error('Error fetching weather from map:', e); 
+            } catch (e) {
+                console.error('Error fetching weather from map:', e);
                 alert('Could not get weather for this location.');
             }
         }
@@ -1550,7 +1584,7 @@
         // Central function to update all dashboard components based on location
         async function updateDashboard(location, lat, lon) {
             const village = location || document.getElementById('villageSelect')?.value || 'Coimbatore';
-            
+
             console.log('Updating dashboard for:', village, 'Coords:', lat, lon);
 
             // Show loading state
@@ -1558,23 +1592,23 @@
             if (locationEl) locationEl.textContent = village;
 
             // Update map if available
-            const coords = { 
-                'Coimbatore': [11.0168, 76.9558], 
-                'Chennai': [13.0827, 80.2707], 
-                'Madurai': [9.9252, 78.1198], 
-                'Chittoor': [13.2170, 79.1000], 
-                'Kallur': [13.3189, 79.4243], 
-                'Hyderabad': [17.3850, 78.4867], 
-                'Bangalore': [12.9716, 77.5946], 
-                'Mangalore': [12.2958, 74.8728], 
-                'Kochi': [9.9312, 76.2673], 
-                'Thiruvananthapuram': [8.5241, 76.9366] 
+            const coords = {
+                'Coimbatore': [11.0168, 76.9558],
+                'Chennai': [13.0827, 80.2707],
+                'Madurai': [9.9252, 78.1198],
+                'Chittoor': [13.2170, 79.1000],
+                'Kallur': [13.3189, 79.4243],
+                'Hyderabad': [17.3850, 78.4867],
+                'Bangalore': [12.9716, 77.5946],
+                'Mangalore': [12.2958, 74.8728],
+                'Kochi': [9.9312, 76.2673],
+                'Thiruvananthapuram': [8.5241, 76.9366]
             };
-            
+
             const pos = coords[village] || [11.0168, 76.9558];
             const latNum = parseFloat(lat);
             const lonNum = parseFloat(lon);
-            
+
             if (lat && lon && !isNaN(latNum) && !isNaN(lonNum)) {
                 if (map && map.setView) map.setView([latNum, lonNum], 12);
             } else if (map && map.setView) {
@@ -1594,7 +1628,7 @@
 
             try {
                 let weatherUrl, forecastUrl;
-                
+
                 // Use coordinates-based APIs if lat/lon provided
                 if (lat && lon) {
                     weatherUrl = `/api/weather-by-coords?lat=${lat}&lon=${lon}`;
@@ -1617,24 +1651,24 @@
                     const data = await weatherRes.json();
                     // Convert coords API format to city API format
                     if (data.temperature !== undefined) {
-                        weatherData = { 
-                            current: { 
-                                temp: data.temperature, 
-                                humidity: data.humidity, 
-                                wind: data.windSpeed, 
-                                rain: 0, 
-                                pressure: data.pressure, 
-                                condition: data.weatherCondition, 
-                                city: data.location || village, 
-                                country: data.region || 'India', 
-                                description: data.description 
-                            } 
+                        weatherData = {
+                            current: {
+                                temp: data.temperature,
+                                humidity: data.humidity,
+                                wind: data.windSpeed,
+                                rain: 0,
+                                pressure: data.pressure,
+                                condition: data.weatherCondition,
+                                city: data.location || village,
+                                country: data.region || 'India',
+                                description: data.description
+                            }
                         };
                     } else {
                         weatherData = data;
                     }
                 }
-                
+
                 let forecastData = defaultForecast;
                 if (forecastRes?.ok) {
                     const data = await forecastRes.json();
@@ -1642,7 +1676,7 @@
                         forecastData = data;
                     }
                 }
-                
+
                 const cropData = (cropRes?.ok) ? await cropRes.json() : defaultCrops;
 
                 // Update all dashboard components
@@ -1664,7 +1698,7 @@
         function updateWeatherDisplay(weatherData, villageName) {
             const village = villageName || 'Coimbatore';
             let current = {};
-            
+
             // Handle different API response formats
             if (weatherData.current) {
                 // City API format
@@ -1685,10 +1719,10 @@
             } else {
                 current = { temp: 28, humidity: 65, condition: 'Clear', city: village, country: 'India' };
             }
-            
+
             // Ensure country is a string
             const country = (current.country && typeof current.country === 'object') ? 'India' : (current.country || 'India');
-            
+
             // Update stats
             document.getElementById('statLocation').textContent = current.city || village;
             document.getElementById('statDistrict').textContent = country;
@@ -1720,7 +1754,7 @@
         function updateCropDisplay(cropData) {
             const cropsArray = Array.isArray(cropData) ? cropData : (cropData.recommendations || []);
             const topCrop = cropsArray[0] || {};
-            
+
             // Update stats
             document.getElementById('statCrop').textContent = topCrop.crop || 'Rice';
             document.getElementById('statScore').textContent = Math.round((topCrop.probability || topCrop.score || 0.92) * 100) + '% Match';
@@ -1758,7 +1792,7 @@
                         document.getElementById('locWind').textContent = data.windSpeed || data.current?.wind || 5;
                         document.getElementById('locVillage').textContent = data.location || village;
                         document.getElementById('villageSelect').value = data.location || village;
-                        
+
                         // Update all dashboard components
                         updateDashboard(data.location || village);
                     } else {
@@ -1809,7 +1843,7 @@
         async function loadAllData() {
             const village = document.getElementById('villageSelect')?.value || 'Coimbatore';
             console.log('Loading data for:', village);
-            
+
             // Use central updateDashboard function
             updateDashboard(village);
         }
